@@ -94,7 +94,7 @@ export function SectionDetails({ assessment, period }: { assessment: SectionAsse
         <div><dt>Valid responses</dt><dd>{integer(row.responses)}</dd></div>
         <div><dt>Eligible invitations</dt><dd>{integer(row.invitations)}</dd></div>
         <div><dt>Previous rating{comparablePeriod && ` · ${comparablePeriod}`}</dt><dd>{formatScore(previousRating)}</dd></div>
-        <div><dt>Comparable change</dt><dd>{change === null ? "Unavailable" : `${signed(change, 2)} pts`}</dd></div>
+        <div><dt>Comparable change</dt><dd>{change === null ? "N/A" : `${signed(change, 2)} pts`}</dd></div>
       </dl>
       <dl className="detail-dimensions" aria-label="Illustrative evaluation dimensions">
         {dimensions.map(({ id, name }) => <div key={id}><dt>{name}</dt><dd>

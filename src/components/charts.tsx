@@ -8,7 +8,7 @@ import {
 } from "recharts";
 import { useReportingFilter } from "@/components/app-shell";
 import { courseByCode, dimensions, facultyById, periods, type Dimension, type Period, type Section } from "@/data/academic";
-import { averageSete, compare, formatPercent, formatScore, integer, scopedRows, sectionTitle, signed, summarize,
+import { averageSete, compare, formatPercent, formatScore, integer, previousReportingPeriod, scopedRows, sectionTitle, signed, summarize,
   reviewTones, type Scope, type SectionAssessment } from "@/lib/analytics";
 import { Card, CardContent, CardHeader, CardTitle, Empty } from "@/components/ui/primitives";
 import { DashboardSelect } from "@/components/ui/select";
@@ -64,9 +64,11 @@ export function SeteTrend({ scope, period, course, section, onOpen }: {
     const { responses, passing } = summarize(rows);
     return { period: item, rows, label: item.short, value: averageSete(rows, dimension), responses, passing };
   });
-  const series: TrendPoint[] = observations.map((point, index) => ({
-    ...point, change: compare(point.value, observations[index - 1]?.value ?? null, 2),
-  }));
+  const valuesByPeriod = new Map(observations.map((point) => [point.period.id, point.value]));
+  const series: TrendPoint[] = observations.map((point) => {
+    const previous = previousReportingPeriod(point.period.id);
+    return { ...point, change: compare(point.value, previous ? valuesByPeriod.get(previous.id) ?? null : null, 2) };
+  });
   const hasData = series.some((point) => point.value !== null);
 
   function openPoint(index: number) {
@@ -78,14 +80,17 @@ export function SeteTrend({ scope, period, course, section, onOpen }: {
     controls={<DashboardSelect<Dimension | "all"> label="Evaluation dimension" value={dimension}
       onChange={setDimension} active={dimension !== "all"}
       options={[{ value: "all", label: "All dimensions" }, ...dimensions.map(({ id, name }) => ({ value: id, label: name }))]} />}>
-    <span className="chart-unit">Rating / 5</span>
+    <div className="trend-meta">
+      <span className="chart-unit">Rating / 5</span>
+      <span className="trend-period">Selected · {period.short}</span>
+    </div>
     {hasData ? <div className="trend-plot" aria-label="SETE ratings by semester on a 1–5 scale">
       <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 550, height: 172 }}>
         <LineChart data={series} margin={{ top: 12, right: 15, left: 0, bottom: 5 }} accessibilityLayer>
           <CartesianGrid vertical={false} stroke="var(--chart-grid)" />
           <YAxis ticks={ratingTicks} domain={[1, 5]} tick={axis} tickLine={false} axisLine={false} width={27} allowDataOverflow />
           <XAxis dataKey="label" tick={axis} tickLine={false} axisLine={false} minTickGap={12} tickMargin={8} />
-          <ReferenceLine x={period.short} stroke="var(--accent-line)" strokeDasharray="3 4" />
+          <ReferenceLine x={period.short} stroke="var(--chart-accent)" strokeOpacity={0.65} strokeDasharray="3 4" />
           <Tooltip cursor={{ stroke: "var(--chart-grid)" }} content={({ active, payload }) => {
             const point = payload?.[0]?.payload as TrendPoint | undefined;
             if (!active || !point) return null;
@@ -94,14 +99,19 @@ export function SeteTrend({ scope, period, course, section, onOpen }: {
               <div><span>SETE</span><b>{formatScore(point.value)} / 5</b></div>
               <div><span>Valid responses</span><b>{integer(point.responses)}</b></div>
               <div><span>Passing rate</span><b>{formatPercent(point.passing)}</b></div>
-              {point.change !== null && <small>{signed(point.change, 2)} pts vs previous period</small>}
+              <small>{point.change === null ? "Previous-period change N/A" : `${signed(point.change, 2)} pts vs previous period`}</small>
             </div>;
           }} />
           <Line dataKey="value" type="linear" stroke="var(--chart-accent)" strokeWidth={2.4}
-            dot={({ cx, cy, index }) => cx == null || cy == null ? null : <g key={index}>
-              <circle cx={cx} cy={cy} r={12} fill="transparent" className="trend-dot-hit" onClick={() => openPoint(index)} />
-              <circle cx={cx} cy={cy} r={3.5} fill="var(--surface)" stroke="var(--chart-accent)" strokeWidth={1.6} pointerEvents="none" />
-            </g>}
+            dot={({ cx, cy, index }) => {
+              if (cx == null || cy == null) return null;
+              const selected = series[index]?.period.id === period.id;
+              return <g key={index}>
+                <circle cx={cx} cy={cy} r={12} fill="transparent" className="trend-dot-hit" onClick={() => openPoint(index)} />
+                <circle cx={cx} cy={cy} r={selected ? 5 : 3.5} fill={selected ? "var(--chart-accent)" : "var(--surface)"}
+                  stroke="var(--chart-accent)" strokeWidth={1.6} pointerEvents="none" />
+              </g>;
+            }}
             activeDot={({ cx, cy, index }) => <g>
               <circle cx={cx} cy={cy} r={12} fill="transparent" className="trend-dot-hit" onClick={() => openPoint(index)} />
               <circle cx={cx} cy={cy} r={5} fill="var(--chart-accent)" stroke="var(--surface)" strokeWidth={2} pointerEvents="none" />
@@ -112,7 +122,7 @@ export function SeteTrend({ scope, period, course, section, onOpen }: {
     </div> : <Empty>No SETE observations for this selection.</Empty>}
     {hasData && <ChartReadout>{series.map((point, index) => {
       const values = <><span>{point.label}</span><span>{formatScore(point.value)} SETE · {formatPercent(point.passing)} passing</span>
-        <small>{point.responses} responses{point.change !== null && ` · ${signed(point.change, 2)} pts vs previous`}</small></>;
+        <small>{point.responses} responses · {point.change === null ? "change N/A" : `${signed(point.change, 2)} pts vs previous`}</small></>;
       return point.value !== null ? <button type="button" className="point-row" key={point.label} onClick={() => openPoint(index)}>
         {values}<ArrowUpRight aria-hidden="true" />
       </button> : <div className="point-row" key={point.label}>{values}</div>;

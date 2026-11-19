@@ -3,8 +3,8 @@
 import Image from "next/image";
 import { Compass, Moon, Sun, UserRound } from "lucide-react";
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { courseByCode, periods, programs, type Period, type Section } from "@/data/academic";
-import { defaultScope, scopedRows, sectionKey, sectionTitle, type Scope } from "@/lib/analytics";
+import { courseByCode, courses, periods, programs, type Period, type Section } from "@/data/academic";
+import { defaultPeriod, defaultScope, previousReportingPeriod, reportingPeriods, scopedRows, sectionKey, sectionTitle, type Scope } from "@/lib/analytics";
 import { DashboardFooter } from "@/components/dashboard-footer";
 import { DashboardTour } from "@/components/dashboard-tour";
 import { WelcomeDialog } from "@/components/welcome-dialog";
@@ -12,14 +12,17 @@ import { Button } from "@/components/ui/primitives";
 import { Sheet } from "@/components/ui/sheet";
 
 type Theme = "light" | "dark";
-type DashboardFilters = { program: Scope["program"]; course: string; section: string };
+type DashboardFilters = Scope & { course: string; section: string };
+type PeriodSelection = Partial<Pick<Period, "year" | "semester">>;
 type Detail = { title: string; description?: string; content: ReactNode };
 
 type DashboardContext = {
   scope: Scope;
   course: string;
   section: string;
+  availableSubjects: (typeof courses)[number][];
   availableSections: Section[];
+  setPeriod: (selection: PeriodSelection) => void;
   setProgram: (program: Scope["program"]) => void;
   setCourse: (course: string) => void;
   setSection: (section: string) => void;
@@ -33,8 +36,16 @@ type DashboardContext = {
 };
 
 const Dashboard = createContext<DashboardContext | null>(null);
-const defaultFilters: DashboardFilters = { program: defaultScope.program, course: "all", section: "all" };
+const defaultFilters: DashboardFilters = { ...defaultScope, course: "all", section: "all" };
 const onboardingKey = "acadgine-onboarding";
+
+function retainCompatibleFilters(filters: DashboardFilters): DashboardFilters {
+  const records = scopedRows(filters);
+  const course = records.some((row) => row.course === filters.course) ? filters.course : "all";
+  const section = records.some((row) => sectionKey(row) === filters.section && (course === "all" || row.course === course))
+    ? filters.section : "all";
+  return { ...filters, course, section };
+}
 
 export function useDashboard() {
   const context = useContext(Dashboard);
@@ -128,34 +139,48 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
   }
 
-  const scope = useMemo<Scope>(() => ({ period: defaultScope.period, program: filters.program }), [filters.program]);
+  const scope = useMemo<Scope>(() => ({ period: filters.period, program: filters.program }), [filters.period, filters.program]);
   const { course, section } = filters;
-  const period = periods[scope.period];
-  const previousPeriod = periods[scope.period - 1];
-  const availableSections = useMemo(() => scopedRows(scope, course), [scope, course]);
+  const period = periods.find(({ id }) => id === scope.period) ?? defaultPeriod;
+  const previousPeriod = previousReportingPeriod(period.id);
+  const programRows = useMemo(() => scopedRows(scope), [scope]);
+  const availableSubjects = useMemo(() => {
+    const codes = new Set(programRows.map((row) => row.course));
+    return courses.filter(({ code }) => codes.has(code));
+  }, [programRows]);
+  const availableSections = useMemo(() => course === "all" ? programRows : programRows.filter((row) => row.course === course),
+    [programRows, course]);
   const rows = useMemo(() => section === "all" ? availableSections : availableSections.filter((row) => sectionKey(row) === section),
     [availableSections, section]);
-  const previous = useMemo(() => scopedRows({ ...scope, period: scope.period - 1 }, course, section), [scope, course, section]);
+  const previous = useMemo(() => previousPeriod ? scopedRows({ ...scope, period: previousPeriod.id }, course, section) : [],
+    [scope, course, section, previousPeriod]);
   const programLabel = programs.find(({ id }) => id === scope.program)?.name ?? "All programs";
   const selectionLabel = section !== "all" && rows[0] ? sectionTitle(rows[0])
     : courseByCode.get(course)?.name;
 
-  function setProgram(program: Scope["program"]) {
+  function setPeriod(selection: PeriodSelection) {
     setFilters((prior) => {
-      const course = program === "all" || courseByCode.get(prior.course)?.program === program ? prior.course : "all";
-      const section = scopedRows({ ...defaultScope, program }, course, prior.section).length ? prior.section : "all";
-      return { program, course, section };
+      const current = periods.find(({ id }) => id === prior.period) ?? defaultPeriod;
+      const year = selection.year ?? current.year;
+      const semester = selection.semester ?? current.semester;
+      const next = reportingPeriods.find((item) => item.year === year && item.semester === semester)
+        ?? (selection.year ? reportingPeriods.filter((item) => item.year === year).slice(-1)[0] : undefined);
+      if (!next || next.id === prior.period) return prior;
+
+      const filters = { ...prior, period: next.id };
+      const program = scopedRows(filters).length ? prior.program : "all";
+      return retainCompatibleFilters({ ...filters, program });
     });
+  }
+
+  function setProgram(program: Scope["program"]) {
+    setFilters((prior) => retainCompatibleFilters({ ...prior, program }));
   }
 
   function setCourse(course: string) {
     setFilters((prior) => {
-      if (course !== "all") {
-        const subject = courseByCode.get(course);
-        if (!subject || (prior.program !== "all" && subject.program !== prior.program)) return prior;
-      }
-      const section = scopedRows({ ...defaultScope, program: prior.program }, course, prior.section).length ? prior.section : "all";
-      return { ...prior, course, section };
+      if (course !== "all" && !scopedRows(prior, course).length) return prior;
+      return retainCompatibleFilters({ ...prior, course });
     });
   }
 
@@ -163,8 +188,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     setFilters((prior) => {
       if (section === "all") return { ...prior, section };
 
-      const [match] = scopedRows({ ...defaultScope, program: prior.program }, prior.course, section);
-      return match ? { program: match.program, course: match.course, section } : prior;
+      const [match] = scopedRows(prior, prior.course, section);
+      return match ? { ...prior, program: match.program, course: match.course, section } : prior;
     });
   }
 
@@ -180,7 +205,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     setDetailOpen(true);
   }
 
-  return <Dashboard.Provider value={{ scope, course, section, availableSections, setProgram, setCourse, setSection, period, previousPeriod, rows, previous,
+  return <Dashboard.Provider value={{ scope, course, section, availableSubjects, availableSections, setPeriod, setProgram, setCourse, setSection, period, previousPeriod, rows, previous,
     filterVersion, resetFilters, openDetail }}>
     <a className="skip-link" href="#main-content">Skip to content</a>
     <header ref={header} className="topbar">

@@ -16,7 +16,7 @@ import { DashboardSelect } from "@/components/ui/select";
 import { OverviewFilters } from "@/components/overview-filters";
 import { type Dimension, type Period, type Section } from "@/data/academic";
 import {
-  assessSections, averageSete, compare, formatPercent, formatScore, integer, percent, reviewTones, scopedRows,
+  assessSections, averageSete, compare, formatPercent, formatScore, integer, percent, previousReportingPeriod, reviewTones, scopedRows,
   sectionFindings, sectionTitle, signed, summarize, targets,
   type SectionAssessment, type SectionFinding, type ReviewStatus, type Tone,
 } from "@/lib/analytics";
@@ -110,13 +110,14 @@ export function Overview() {
   }
 
   function showTrendData(item: Period, matchingRows: Section[], dimension: Dimension | "all") {
-    const previousRows = scopedRows({ ...scope, period: item.id - 1 }, course, section);
+    const previous = previousReportingPeriod(item.id);
+    const previousRows = previous ? scopedRows({ ...scope, period: previous.id }, course, section) : [];
     const score = averageSete(matchingRows, dimension);
     const change = compare(score, averageSete(previousRows, dimension), 2);
     const scopeMetrics = summarize(scopedRows({ ...scope, period: item.id }, course, section));
     openDetail({ title: "Semester SETE records", description: item.label, content: <>
       <p className="detail-summary">{formatScore(score)} / 5 · {integer(scopeMetrics.responses)} valid responses · {formatPercent(scopeMetrics.passing)} passing
-        {change !== null && ` · ${signed(change, 2)} pts vs previous period`}.</p>
+        {change === null ? " · Previous-period change N/A" : ` · ${signed(change, 2)} pts vs previous period`}.</p>
       <SectionPerformanceTable assessments={assessSections(matchingRows, previousRows)}
         dimension={dimension === "all" ? undefined : dimension} />
     </> });
@@ -148,7 +149,9 @@ export function Overview() {
     { id: "improvement", title: "Teaching improvement rate", icon: TrendingUp, number: improvement === null ? "N/A" : improvement.toFixed(1), unit: improvement === null ? "" : "%",
       change: null, decimals: 0, deltaUnit: "", status: improvement === null ? "No comparable data" : `${improved.length} improved`,
       tone: improvement === null ? "info" : improved.length ? "positive" : "neutral", onOpen: () => showRecords("Teaching improvement rate", comparable,
-        `${improved.length} of ${comparable.length} comparable sections improved. Comparisons match subject, section and professor across ${previousPeriod?.label ?? "the previous period"}, with adequate participation in both periods.`, { comparison: true }) },
+        previousPeriod
+          ? `${improved.length} of ${comparable.length} comparable sections improved. Comparisons match subject, section and professor with ${previousPeriod.label} and require adequate participation in both periods.`
+          : "Teaching improvement is N/A because there is no previous reporting period.", { comparison: true }) },
   ];
 
   return <div className="page-stack overview">
@@ -166,16 +169,16 @@ export function Overview() {
     <section className="kpi-grid" aria-label="Key performance indicators" data-tour-target="kpis" tabIndex={-1}>
       {cards.map(({ id, title, icon: Icon, number, unit, change, decimals, deltaUnit, status, tone, onOpen }) => {
         const Trend = change === null || change === 0 ? Minus : change < 0 ? ArrowDownRight : ArrowUpRight;
-        const delta = change === null ? "" : `${signed(change, decimals)} ${deltaUnit}`;
+        const delta = change === null ? "N/A" : `${signed(change, decimals)} ${deltaUnit}`;
         const showTrend = id !== "review" && id !== "improvement";
-        const comparison = delta ? `${delta} vs previous period${id === "sete" ? " for comparable sections" : ""}` : "No prior comparison";
+        const comparison = change === null ? "Previous-period change N/A" : `${delta} vs previous period${id === "sete" ? " for comparable sections" : ""}`;
         return <Button key={id} variant="ghost" className="kpi" onClick={onOpen}>
           <span className="kpi-title"><Icon aria-hidden="true" />{title}</span>
           <span className="kpi-value" key={number}>{number}{unit && <small>{unit}</small>}</span>
           <span className="kpi-meta">
             {showTrend && <span className="kpi-change" title={comparison}
               data-tone={change === null || change === 0 ? "neutral" : change < 0 ? "warning" : "positive"}>
-              <Trend aria-hidden="true" /><span aria-hidden="true">{delta}</span><span className="sr-only">{comparison}</span>
+              {change !== null && <Trend aria-hidden="true" />}<span aria-hidden="true">{delta}</span><span className="sr-only">{comparison}</span>
             </span>}
             <Status tone={tone as Tone}>{status}</Status>
           </span>

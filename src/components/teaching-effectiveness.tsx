@@ -29,7 +29,7 @@ export function TeachingEffectiveness({ rows, assessments, metrics, onOpenDimens
 
   function openRating(rating: (typeof ratings)[number], reason?: string) {
     const parts = [rating.value === null ? "No ratings." : `Weighted rating: ${formatScore(rating.value)} / 5.`,
-      rating.change === null ? "No previous-period comparison." : `${signed(rating.change, 2)} points vs previous period.`];
+      rating.change === null ? "Previous-period change N/A." : `${signed(rating.change, 2)} points vs previous period.`];
     onOpenDimension(rating.id, rating.name, [...parts, reason].filter(Boolean).join(" "));
   }
 
@@ -52,7 +52,7 @@ export function TeachingEffectiveness({ rows, assessments, metrics, onOpenDimens
             {ratings.map((rating) => {
               const { id, name, value, change } = rating;
               const needsReview = change !== null && change <= -targets.dimensionDrop;
-              const trend = change === null ? "No previous-period comparison" : `${signed(change, 2)} points vs previous comparable period`;
+              const trend = change === null ? "Previous-period change N/A" : `${signed(change, 2)} points vs previous comparable period`;
               const TrendIcon = change === null || change === 0 ? Minus : change < 0 ? ArrowDownRight : ArrowUpRight;
               return <button className="dimension-row" type="button" key={id} onClick={() => openRating(rating)} data-review={needsReview}
                 aria-label={`${name}, ${value === null ? "no ratings" : `${formatScore(value)} out of 5`}. ${trend}.${needsReview ? " Meets demo review threshold." : ""} View details`}>
@@ -62,7 +62,7 @@ export function TeachingEffectiveness({ rows, assessments, metrics, onOpenDimens
                 </span>
                 <strong>{formatScore(value)}</strong>
                 <span className="dimension-trend" aria-hidden="true" title={trend}
-                  data-tone={change === null || change === 0 ? "neutral" : change < 0 ? "warning" : "positive"}><TrendIcon /></span>
+                  data-tone={change === null || change === 0 ? "neutral" : change < 0 ? "warning" : "positive"}>{change === null ? "N/A" : <TrendIcon />}</span>
               </button>;
             })}
           </div>

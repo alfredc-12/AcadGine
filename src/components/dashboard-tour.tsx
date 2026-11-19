@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/primitives";
 const steps = [
   {
     target: "filters", label: "Dashboard Filters", title: "Explore Your Data",
-    description: "Filter academic performance and SETE results by program, subject, or section.",
+    description: "Filter academic performance and SETE results by academic year, semester, program, subject, or section.",
     tip: "Select a section to see its teaching evaluations and passing rate.",
   },
   {

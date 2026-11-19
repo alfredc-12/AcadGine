@@ -1,4 +1,4 @@
-import { courseByCode, dimensions, periods, sections, type Dimension, type Period, type Program, type Section } from "@/data/academic";
+import { courseByCode, dimensions, latest, periods, sections, type Dimension, type Period, type Program, type Section } from "@/data/academic";
 
 export const targets = {
   passing: 88,
@@ -14,9 +14,20 @@ export const targets = {
   minGraded: 10,
 };
 
-export const defaultScope = { period: periods[periods.length - 1].id, program: "all" } as const;
+const recordedPeriods = new Set(sections.map(({ period }) => period));
+export const reportingPeriods = periods.filter(({ id }) => recordedPeriods.has(id));
+export const defaultPeriod = reportingPeriods[reportingPeriods.length - 1] ?? latest;
+export const defaultScope = { period: defaultPeriod.id, program: "all" } as const;
 export type Scope = { period: number; program: Program | "all" };
 export type Tone = "neutral" | "positive" | "warning" | "critical" | "info";
+
+export function previousReportingPeriod(id: number): Period | undefined {
+  for (let index = reportingPeriods.length - 1; index >= 0; index--) {
+    const period = reportingPeriods[index];
+    if (period.id < id) return period;
+  }
+  return undefined;
+}
 
 export function sectionKey(row: Section) {
   return `${row.program}:${row.course}:${row.section}`;
