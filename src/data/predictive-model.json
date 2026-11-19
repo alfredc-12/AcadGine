@@ -1,0 +1,1991 @@
+{
+  "metrics": {
+    "dataset": "synthetic classroom demonstration",
+    "model": "RandomForestRegressor",
+    "prediction_target": "next_semester_passing_rate_pct",
+    "input_features": [
+      "program",
+      "subject_code",
+      "section",
+      "target_semester",
+      "previous_enrollment",
+      "previous_passing_rate_pct",
+      "previous_sete_rating_1to5",
+      "previous_sete_participation_pct",
+      "previous_sete_rating_imputed"
+    ],
+    "train_rows": 400,
+    "test_rows": 100,
+    "test_mae_percentage_points": 4.5223,
+    "test_rmse_percentage_points": 5.6845,
+    "baseline_mae_percentage_points": 4.3484,
+    "baseline_rmse_percentage_points": 5.589,
+    "note": "Predictions are based entirely on synthetic section history; not validated on real students."
+  },
+  "forecasts": [
+    {
+      "sourcePeriodId": 0,
+      "targetYear": 2023,
+      "targetSemester": 2,
+      "predictions": [
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 211",
+          "section": "A",
+          "sourceGraded": 31,
+          "sourcePassingRate": 70.96774193548387,
+          "predictedPassingRate": 72.70517990079362
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 211",
+          "section": "B",
+          "sourceGraded": 28,
+          "sourcePassingRate": 78.57142857142857,
+          "predictedPassingRate": 79.47285817099576
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 222",
+          "section": "A",
+          "sourceGraded": 28,
+          "sourcePassingRate": 89.28571428571429,
+          "predictedPassingRate": 86.39072124999997
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 222",
+          "section": "B",
+          "sourceGraded": 25,
+          "sourcePassingRate": 84,
+          "predictedPassingRate": 83.51395311147185
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 314",
+          "section": "A",
+          "sourceGraded": 30,
+          "sourcePassingRate": 70,
+          "predictedPassingRate": 71.82003374999998
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 314",
+          "section": "B",
+          "sourceGraded": 30,
+          "sourcePassingRate": 70,
+          "predictedPassingRate": 69.07263071428574
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 325",
+          "section": "A",
+          "sourceGraded": 28,
+          "sourcePassingRate": 89.28571428571429,
+          "predictedPassingRate": 85.67669375000001
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 325",
+          "section": "B",
+          "sourceGraded": 25,
+          "sourcePassingRate": 96,
+          "predictedPassingRate": 89.93629874999996
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 326",
+          "section": "A",
+          "sourceGraded": 25,
+          "sourcePassingRate": 80,
+          "predictedPassingRate": 82.38853309523809
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 326",
+          "section": "B",
+          "sourceGraded": 22,
+          "sourcePassingRate": 86.36363636363636,
+          "predictedPassingRate": 86.91383184523812
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 212",
+          "section": "A",
+          "sourceGraded": 26,
+          "sourcePassingRate": 65.38461538461539,
+          "predictedPassingRate": 67.32909928571426
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 212",
+          "section": "B",
+          "sourceGraded": 26,
+          "sourcePassingRate": 69.23076923076923,
+          "predictedPassingRate": 71.67704148809526
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 223",
+          "section": "A",
+          "sourceGraded": 30,
+          "sourcePassingRate": 70,
+          "predictedPassingRate": 72.3404994246032
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 223",
+          "section": "B",
+          "sourceGraded": 27,
+          "sourcePassingRate": 77.77777777777779,
+          "predictedPassingRate": 78.82072928571432
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 311",
+          "section": "A",
+          "sourceGraded": 27,
+          "sourcePassingRate": 77.77777777777779,
+          "predictedPassingRate": 77.96630575396821
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 311",
+          "section": "B",
+          "sourceGraded": 24,
+          "sourcePassingRate": 79.16666666666666,
+          "predictedPassingRate": 78.42411479797983
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 322",
+          "section": "A",
+          "sourceGraded": 25,
+          "sourcePassingRate": 88,
+          "predictedPassingRate": 87.75859065476202
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 322",
+          "section": "B",
+          "sourceGraded": 25,
+          "sourcePassingRate": 84,
+          "predictedPassingRate": 81.54740519841269
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 324",
+          "section": "A",
+          "sourceGraded": 25,
+          "sourcePassingRate": 96,
+          "predictedPassingRate": 90.36789174603172
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 324",
+          "section": "B",
+          "sourceGraded": 22,
+          "sourcePassingRate": 90.9090909090909,
+          "predictedPassingRate": 87.20297196428572
+        }
+      ]
+    },
+    {
+      "sourcePeriodId": 1,
+      "targetYear": 2024,
+      "targetSemester": 1,
+      "predictions": [
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 211",
+          "section": "A",
+          "sourceGraded": 33,
+          "sourcePassingRate": 66.66666666666666,
+          "predictedPassingRate": 66.83091773809524
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 211",
+          "section": "B",
+          "sourceGraded": 30,
+          "sourcePassingRate": 76.66666666666667,
+          "predictedPassingRate": 77.31790785714284
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 222",
+          "section": "A",
+          "sourceGraded": 30,
+          "sourcePassingRate": 90,
+          "predictedPassingRate": 88.97906373015876
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 222",
+          "section": "B",
+          "sourceGraded": 27,
+          "sourcePassingRate": 85.18518518518519,
+          "predictedPassingRate": 84.61982654761903
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 314",
+          "section": "B",
+          "sourceGraded": 32,
+          "sourcePassingRate": 78.125,
+          "predictedPassingRate": 76.93795327380951
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 325",
+          "section": "A",
+          "sourceGraded": 30,
+          "sourcePassingRate": 96.66666666666667,
+          "predictedPassingRate": 90.75261107142856
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 325",
+          "section": "B",
+          "sourceGraded": 27,
+          "sourcePassingRate": 88.88888888888889,
+          "predictedPassingRate": 86.03468666666667
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 326",
+          "section": "A",
+          "sourceGraded": 27,
+          "sourcePassingRate": 85.18518518518519,
+          "predictedPassingRate": 84.17153358766232
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 326",
+          "section": "B",
+          "sourceGraded": 24,
+          "sourcePassingRate": 83.33333333333334,
+          "predictedPassingRate": 82.77563666666667
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 212",
+          "section": "A",
+          "sourceGraded": 28,
+          "sourcePassingRate": 60.71428571428571,
+          "predictedPassingRate": 63.228922559523795
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 212",
+          "section": "B",
+          "sourceGraded": 28,
+          "sourcePassingRate": 64.28571428571429,
+          "predictedPassingRate": 64.62676660714287
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 223",
+          "section": "A",
+          "sourceGraded": 32,
+          "sourcePassingRate": 71.875,
+          "predictedPassingRate": 71.18709509199134
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 223",
+          "section": "B",
+          "sourceGraded": 29,
+          "sourcePassingRate": 79.3103448275862,
+          "predictedPassingRate": 82.90163920274172
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 311",
+          "section": "A",
+          "sourceGraded": 29,
+          "sourcePassingRate": 75.86206896551724,
+          "predictedPassingRate": 75.15755005952377
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 311",
+          "section": "B",
+          "sourceGraded": 26,
+          "sourcePassingRate": 84.61538461538461,
+          "predictedPassingRate": 82.42903984126988
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 322",
+          "section": "A",
+          "sourceGraded": 27,
+          "sourcePassingRate": 92.5925925925926,
+          "predictedPassingRate": 88.87878773809524
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 322",
+          "section": "B",
+          "sourceGraded": 27,
+          "sourcePassingRate": 85.18518518518519,
+          "predictedPassingRate": 84.96754482142862
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 324",
+          "section": "A",
+          "sourceGraded": 27,
+          "sourcePassingRate": 96.29629629629629,
+          "predictedPassingRate": 90.45061904761899
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 324",
+          "section": "B",
+          "sourceGraded": 24,
+          "sourcePassingRate": 95.83333333333334,
+          "predictedPassingRate": 88.19491677489174
+        }
+      ]
+    },
+    {
+      "sourcePeriodId": 2,
+      "targetYear": 2024,
+      "targetSemester": 2,
+      "predictions": [
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 211",
+          "section": "A",
+          "sourceGraded": 34,
+          "sourcePassingRate": 76.47058823529412,
+          "predictedPassingRate": 80.4251939285715
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 211",
+          "section": "B",
+          "sourceGraded": 31,
+          "sourcePassingRate": 74.19354838709677,
+          "predictedPassingRate": 77.33921418650792
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 222",
+          "section": "A",
+          "sourceGraded": 31,
+          "sourcePassingRate": 87.09677419354838,
+          "predictedPassingRate": 88.7253729761905
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 222",
+          "section": "B",
+          "sourceGraded": 28,
+          "sourcePassingRate": 89.28571428571429,
+          "predictedPassingRate": 87.21807821428573
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 314",
+          "section": "A",
+          "sourceGraded": 33,
+          "sourcePassingRate": 81.81818181818183,
+          "predictedPassingRate": 82.41749234126986
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 314",
+          "section": "B",
+          "sourceGraded": 33,
+          "sourcePassingRate": 81.81818181818183,
+          "predictedPassingRate": 81.88715523809529
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 325",
+          "section": "A",
+          "sourceGraded": 31,
+          "sourcePassingRate": 93.54838709677419,
+          "predictedPassingRate": 90.86358511904763
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 325",
+          "section": "B",
+          "sourceGraded": 28,
+          "sourcePassingRate": 89.28571428571429,
+          "predictedPassingRate": 86.18599458333335
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 326",
+          "section": "A",
+          "sourceGraded": 28,
+          "sourcePassingRate": 89.28571428571429,
+          "predictedPassingRate": 85.3406436309524
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 326",
+          "section": "B",
+          "sourceGraded": 25,
+          "sourcePassingRate": 92,
+          "predictedPassingRate": 87.45273744047621
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 212",
+          "section": "A",
+          "sourceGraded": 29,
+          "sourcePassingRate": 68.96551724137932,
+          "predictedPassingRate": 72.63819940476189
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 223",
+          "section": "A",
+          "sourceGraded": 33,
+          "sourcePassingRate": 66.66666666666666,
+          "predictedPassingRate": 69.02329966269843
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 223",
+          "section": "B",
+          "sourceGraded": 30,
+          "sourcePassingRate": 83.33333333333334,
+          "predictedPassingRate": 84.05652815476198
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 311",
+          "section": "A",
+          "sourceGraded": 30,
+          "sourcePassingRate": 83.33333333333334,
+          "predictedPassingRate": 80.9528549404762
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 311",
+          "section": "B",
+          "sourceGraded": 27,
+          "sourcePassingRate": 92.5925925925926,
+          "predictedPassingRate": 89.9810173809524
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 322",
+          "section": "A",
+          "sourceGraded": 28,
+          "sourcePassingRate": 92.85714285714286,
+          "predictedPassingRate": 91.71180226190481
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 322",
+          "section": "B",
+          "sourceGraded": 28,
+          "sourcePassingRate": 89.28571428571429,
+          "predictedPassingRate": 87.85419109126984
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 324",
+          "section": "A",
+          "sourceGraded": 28,
+          "sourcePassingRate": 96.42857142857143,
+          "predictedPassingRate": 91.54336261904763
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 324",
+          "section": "B",
+          "sourceGraded": 25,
+          "sourcePassingRate": 96,
+          "predictedPassingRate": 89.06497701298696
+        }
+      ]
+    },
+    {
+      "sourcePeriodId": 3,
+      "targetYear": 2025,
+      "targetSemester": 1,
+      "predictions": [
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 211",
+          "section": "A",
+          "sourceGraded": 36,
+          "sourcePassingRate": 75,
+          "predictedPassingRate": 74.22120250000006
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 211",
+          "section": "B",
+          "sourceGraded": 33,
+          "sourcePassingRate": 84.84848484848484,
+          "predictedPassingRate": 84.9600606746032
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 222",
+          "section": "A",
+          "sourceGraded": 33,
+          "sourcePassingRate": 90.9090909090909,
+          "predictedPassingRate": 87.88429261904768
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 222",
+          "section": "B",
+          "sourceGraded": 30,
+          "sourcePassingRate": 86.66666666666667,
+          "predictedPassingRate": 88.65988029761904
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 314",
+          "section": "A",
+          "sourceGraded": 35,
+          "sourcePassingRate": 77.14285714285715,
+          "predictedPassingRate": 76.07155101190473
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 314",
+          "section": "B",
+          "sourceGraded": 35,
+          "sourcePassingRate": 82.85714285714286,
+          "predictedPassingRate": 81.66468136904767
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 325",
+          "section": "A",
+          "sourceGraded": 33,
+          "sourcePassingRate": 96.96969696969697,
+          "predictedPassingRate": 91.22454428571429
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 325",
+          "section": "B",
+          "sourceGraded": 30,
+          "sourcePassingRate": 90,
+          "predictedPassingRate": 86.09800285714287
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 326",
+          "section": "A",
+          "sourceGraded": 30,
+          "sourcePassingRate": 86.66666666666667,
+          "predictedPassingRate": 88.10265422619048
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 326",
+          "section": "B",
+          "sourceGraded": 27,
+          "sourcePassingRate": 88.88888888888889,
+          "predictedPassingRate": 86.4756679761905
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 212",
+          "section": "A",
+          "sourceGraded": 31,
+          "sourcePassingRate": 67.74193548387096,
+          "predictedPassingRate": 66.79481226190477
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 212",
+          "section": "B",
+          "sourceGraded": 31,
+          "sourcePassingRate": 64.51612903225806,
+          "predictedPassingRate": 65.0120999404762
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 223",
+          "section": "A",
+          "sourceGraded": 35,
+          "sourcePassingRate": 71.42857142857143,
+          "predictedPassingRate": 72.7112028499279
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 223",
+          "section": "B",
+          "sourceGraded": 32,
+          "sourcePassingRate": 90.625,
+          "predictedPassingRate": 88.53417722222223
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 311",
+          "section": "A",
+          "sourceGraded": 32,
+          "sourcePassingRate": 84.375,
+          "predictedPassingRate": 80.91213085317465
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 311",
+          "section": "B",
+          "sourceGraded": 29,
+          "sourcePassingRate": 86.20689655172413,
+          "predictedPassingRate": 90.65544527777776
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 322",
+          "section": "A",
+          "sourceGraded": 30,
+          "sourcePassingRate": 96.66666666666667,
+          "predictedPassingRate": 92.13843488095237
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 322",
+          "section": "B",
+          "sourceGraded": 30,
+          "sourcePassingRate": 93.33333333333333,
+          "predictedPassingRate": 90.24825095238097
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 324",
+          "section": "A",
+          "sourceGraded": 30,
+          "sourcePassingRate": 96.66666666666667,
+          "predictedPassingRate": 92.0870830952381
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 324",
+          "section": "B",
+          "sourceGraded": 27,
+          "sourcePassingRate": 92.5925925925926,
+          "predictedPassingRate": 87.48025296536794
+        }
+      ]
+    },
+    {
+      "sourcePeriodId": 4,
+      "targetYear": 2025,
+      "targetSemester": 2,
+      "predictions": [
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 211",
+          "section": "A",
+          "sourceGraded": 38,
+          "sourcePassingRate": 68.42105263157895,
+          "predictedPassingRate": 70.67662053571429
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 211",
+          "section": "B",
+          "sourceGraded": 35,
+          "sourcePassingRate": 82.85714285714286,
+          "predictedPassingRate": 85.59144198051946
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 222",
+          "section": "A",
+          "sourceGraded": 35,
+          "sourcePassingRate": 94.28571428571428,
+          "predictedPassingRate": 91.47935357142856
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 222",
+          "section": "B",
+          "sourceGraded": 32,
+          "sourcePassingRate": 90.625,
+          "predictedPassingRate": 88.82880999999998
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 314",
+          "section": "A",
+          "sourceGraded": 37,
+          "sourcePassingRate": 81.08108108108108,
+          "predictedPassingRate": 82.12329349206351
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 314",
+          "section": "B",
+          "sourceGraded": 37,
+          "sourcePassingRate": 83.78378378378379,
+          "predictedPassingRate": 82.85537351190479
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 325",
+          "section": "A",
+          "sourceGraded": 35,
+          "sourcePassingRate": 97.14285714285714,
+          "predictedPassingRate": 92.69034928571429
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 325",
+          "section": "B",
+          "sourceGraded": 32,
+          "sourcePassingRate": 87.5,
+          "predictedPassingRate": 87.93155809523815
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 326",
+          "section": "A",
+          "sourceGraded": 32,
+          "sourcePassingRate": 90.625,
+          "predictedPassingRate": 88.25675303571423
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 326",
+          "section": "B",
+          "sourceGraded": 29,
+          "sourcePassingRate": 89.65517241379311,
+          "predictedPassingRate": 87.29442083333332
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 212",
+          "section": "A",
+          "sourceGraded": 33,
+          "sourcePassingRate": 72.72727272727273,
+          "predictedPassingRate": 73.48264315476189
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 212",
+          "section": "B",
+          "sourceGraded": 33,
+          "sourcePassingRate": 60.60606060606061,
+          "predictedPassingRate": 61.654215773809504
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 223",
+          "section": "A",
+          "sourceGraded": 37,
+          "sourcePassingRate": 81.08108108108108,
+          "predictedPassingRate": 83.12682309523814
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 223",
+          "section": "B",
+          "sourceGraded": 34,
+          "sourcePassingRate": 85.29411764705883,
+          "predictedPassingRate": 87.55114106782112
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 311",
+          "section": "A",
+          "sourceGraded": 34,
+          "sourcePassingRate": 82.35294117647058,
+          "predictedPassingRate": 81.64402761904765
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 311",
+          "section": "B",
+          "sourceGraded": 31,
+          "sourcePassingRate": 87.09677419354838,
+          "predictedPassingRate": 91.75757710317468
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 322",
+          "section": "A",
+          "sourceGraded": 32,
+          "sourcePassingRate": 93.75,
+          "predictedPassingRate": 93.23754238095235
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 322",
+          "section": "B",
+          "sourceGraded": 32,
+          "sourcePassingRate": 87.5,
+          "predictedPassingRate": 90.86895773809528
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 324",
+          "section": "A",
+          "sourceGraded": 32,
+          "sourcePassingRate": 100,
+          "predictedPassingRate": 95.056460952381
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 324",
+          "section": "B",
+          "sourceGraded": 29,
+          "sourcePassingRate": 96.55172413793103,
+          "predictedPassingRate": 92.78961238095236
+        }
+      ]
+    },
+    {
+      "sourcePeriodId": 5,
+      "targetYear": 2026,
+      "targetSemester": 1,
+      "predictions": [
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 211",
+          "section": "A",
+          "sourceGraded": 40,
+          "sourcePassingRate": 62.5,
+          "predictedPassingRate": 64.7536161904762
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 211",
+          "section": "B",
+          "sourceGraded": 37,
+          "sourcePassingRate": 81.08108108108108,
+          "predictedPassingRate": 85.45390315476192
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 222",
+          "section": "A",
+          "sourceGraded": 37,
+          "sourcePassingRate": 91.8918918918919,
+          "predictedPassingRate": 89.33674972222227
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 222",
+          "section": "B",
+          "sourceGraded": 34,
+          "sourcePassingRate": 88.23529411764706,
+          "predictedPassingRate": 85.77816371031741
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 314",
+          "section": "B",
+          "sourceGraded": 42,
+          "sourcePassingRate": 85.71428571428571,
+          "predictedPassingRate": 83.7867080952381
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 325",
+          "section": "A",
+          "sourceGraded": 37,
+          "sourcePassingRate": 97.2972972972973,
+          "predictedPassingRate": 92.11682714285716
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 325",
+          "section": "B",
+          "sourceGraded": 34,
+          "sourcePassingRate": 85.29411764705883,
+          "predictedPassingRate": 85.02554680555556
+        },
+        {
+          "program": "BSIT",
+          "subjectCode": "IT 326",
+          "section": "A",
+          "sourceGraded": 34,
+          "sourcePassingRate": 91.17647058823529,
+          "predictedPassingRate": 88.07425860347985
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 212",
+          "section": "A",
+          "sourceGraded": 35,
+          "sourcePassingRate": 71.42857142857143,
+          "predictedPassingRate": 72.26662684523818
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 212",
+          "section": "B",
+          "sourceGraded": 35,
+          "sourcePassingRate": 57.14285714285714,
+          "predictedPassingRate": 62.11209065476192
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 223",
+          "section": "A",
+          "sourceGraded": 39,
+          "sourcePassingRate": 74.35897435897436,
+          "predictedPassingRate": 74.2722161309524
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 223",
+          "section": "B",
+          "sourceGraded": 36,
+          "sourcePassingRate": 88.88888888888889,
+          "predictedPassingRate": 91.94305308760678
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 311",
+          "section": "A",
+          "sourceGraded": 36,
+          "sourcePassingRate": 83.33333333333334,
+          "predictedPassingRate": 81.57134876984136
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 322",
+          "section": "A",
+          "sourceGraded": 34,
+          "sourcePassingRate": 97.05882352941177,
+          "predictedPassingRate": 93.90378380952382
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 322",
+          "section": "B",
+          "sourceGraded": 34,
+          "sourcePassingRate": 91.17647058823529,
+          "predictedPassingRate": 88.15528150793652
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 324",
+          "section": "A",
+          "sourceGraded": 34,
+          "sourcePassingRate": 97.05882352941177,
+          "predictedPassingRate": 92.83119190476192
+        },
+        {
+          "program": "BSCS",
+          "subjectCode": "CS 324",
+          "section": "B",
+          "sourceGraded": 31,
+          "sourcePassingRate": 100,
+          "predictedPassingRate": 94.16250488095244
+        }
+      ]
+    }
+  ],
+  "retrospective": [
+    {
+      "targetYear": 2023,
+      "targetSemester": 2,
+      "program": "BSCS",
+      "subjectCode": "CS 212",
+      "section": "A",
+      "actualPassingRate": 76.92,
+      "predictedPassingRate": 79.77,
+      "baselinePassingRate": 81.82
+    },
+    {
+      "targetYear": 2023,
+      "targetSemester": 2,
+      "program": "BSCS",
+      "subjectCode": "CS 212",
+      "section": "B",
+      "actualPassingRate": 68.29,
+      "predictedPassingRate": 71.93,
+      "baselinePassingRate": 66.67
+    },
+    {
+      "targetYear": 2023,
+      "targetSemester": 2,
+      "program": "BSCS",
+      "subjectCode": "CS 223",
+      "section": "A",
+      "actualPassingRate": 90.32,
+      "predictedPassingRate": 86.19,
+      "baselinePassingRate": 85.0
+    },
+    {
+      "targetYear": 2023,
+      "targetSemester": 2,
+      "program": "BSCS",
+      "subjectCode": "CS 223",
+      "section": "B",
+      "actualPassingRate": 90.32,
+      "predictedPassingRate": 91.98,
+      "baselinePassingRate": 96.88
+    },
+    {
+      "targetYear": 2023,
+      "targetSemester": 2,
+      "program": "BSCS",
+      "subjectCode": "CS 311",
+      "section": "A",
+      "actualPassingRate": 76.92,
+      "predictedPassingRate": 69.47,
+      "baselinePassingRate": 69.05
+    },
+    {
+      "targetYear": 2023,
+      "targetSemester": 2,
+      "program": "BSCS",
+      "subjectCode": "CS 311",
+      "section": "B",
+      "actualPassingRate": 73.68,
+      "predictedPassingRate": 68.37,
+      "baselinePassingRate": 67.65
+    },
+    {
+      "targetYear": 2023,
+      "targetSemester": 2,
+      "program": "BSCS",
+      "subjectCode": "CS 322",
+      "section": "A",
+      "actualPassingRate": 64.52,
+      "predictedPassingRate": 65.02,
+      "baselinePassingRate": 64.86
+    },
+    {
+      "targetYear": 2023,
+      "targetSemester": 2,
+      "program": "BSCS",
+      "subjectCode": "CS 322",
+      "section": "B",
+      "actualPassingRate": 70.37,
+      "predictedPassingRate": 75.27,
+      "baselinePassingRate": 73.33
+    },
+    {
+      "targetYear": 2023,
+      "targetSemester": 2,
+      "program": "BSCS",
+      "subjectCode": "CS 324",
+      "section": "A",
+      "actualPassingRate": 69.7,
+      "predictedPassingRate": 72.08,
+      "baselinePassingRate": 70.83
+    },
+    {
+      "targetYear": 2023,
+      "targetSemester": 2,
+      "program": "BSCS",
+      "subjectCode": "CS 324",
+      "section": "B",
+      "actualPassingRate": 75.86,
+      "predictedPassingRate": 84.53,
+      "baselinePassingRate": 85.71
+    },
+    {
+      "targetYear": 2023,
+      "targetSemester": 2,
+      "program": "BSIT",
+      "subjectCode": "IT 211",
+      "section": "A",
+      "actualPassingRate": 87.88,
+      "predictedPassingRate": 76.13,
+      "baselinePassingRate": 77.78
+    },
+    {
+      "targetYear": 2023,
+      "targetSemester": 2,
+      "program": "BSIT",
+      "subjectCode": "IT 211",
+      "section": "B",
+      "actualPassingRate": 97.62,
+      "predictedPassingRate": 93.05,
+      "baselinePassingRate": 97.62
+    },
+    {
+      "targetYear": 2023,
+      "targetSemester": 2,
+      "program": "BSIT",
+      "subjectCode": "IT 222",
+      "section": "A",
+      "actualPassingRate": 82.86,
+      "predictedPassingRate": 77.45,
+      "baselinePassingRate": 76.19
+    },
+    {
+      "targetYear": 2023,
+      "targetSemester": 2,
+      "program": "BSIT",
+      "subjectCode": "IT 222",
+      "section": "B",
+      "actualPassingRate": 83.33,
+      "predictedPassingRate": 87.06,
+      "baselinePassingRate": 86.36
+    },
+    {
+      "targetYear": 2023,
+      "targetSemester": 2,
+      "program": "BSIT",
+      "subjectCode": "IT 314",
+      "section": "A",
+      "actualPassingRate": 80.0,
+      "predictedPassingRate": 80.68,
+      "baselinePassingRate": 80.49
+    },
+    {
+      "targetYear": 2023,
+      "targetSemester": 2,
+      "program": "BSIT",
+      "subjectCode": "IT 314",
+      "section": "B",
+      "actualPassingRate": 65.71,
+      "predictedPassingRate": 66.37,
+      "baselinePassingRate": 67.57
+    },
+    {
+      "targetYear": 2023,
+      "targetSemester": 2,
+      "program": "BSIT",
+      "subjectCode": "IT 325",
+      "section": "A",
+      "actualPassingRate": 84.0,
+      "predictedPassingRate": 88.19,
+      "baselinePassingRate": 89.19
+    },
+    {
+      "targetYear": 2023,
+      "targetSemester": 2,
+      "program": "BSIT",
+      "subjectCode": "IT 325",
+      "section": "B",
+      "actualPassingRate": 79.55,
+      "predictedPassingRate": 73.96,
+      "baselinePassingRate": 76.92
+    },
+    {
+      "targetYear": 2023,
+      "targetSemester": 2,
+      "program": "BSIT",
+      "subjectCode": "IT 326",
+      "section": "A",
+      "actualPassingRate": 94.44,
+      "predictedPassingRate": 89.5,
+      "baselinePassingRate": 89.47
+    },
+    {
+      "targetYear": 2023,
+      "targetSemester": 2,
+      "program": "BSIT",
+      "subjectCode": "IT 326",
+      "section": "B",
+      "actualPassingRate": 87.88,
+      "predictedPassingRate": 75.08,
+      "baselinePassingRate": 76.47
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 1,
+      "program": "BSCS",
+      "subjectCode": "CS 212",
+      "section": "A",
+      "actualPassingRate": 75.68,
+      "predictedPassingRate": 73.33,
+      "baselinePassingRate": 76.92
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 1,
+      "program": "BSCS",
+      "subjectCode": "CS 212",
+      "section": "B",
+      "actualPassingRate": 63.64,
+      "predictedPassingRate": 67.02,
+      "baselinePassingRate": 68.29
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 1,
+      "program": "BSCS",
+      "subjectCode": "CS 223",
+      "section": "A",
+      "actualPassingRate": 88.89,
+      "predictedPassingRate": 86.81,
+      "baselinePassingRate": 90.32
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 1,
+      "program": "BSCS",
+      "subjectCode": "CS 223",
+      "section": "B",
+      "actualPassingRate": 80.65,
+      "predictedPassingRate": 89.89,
+      "baselinePassingRate": 90.32
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 1,
+      "program": "BSCS",
+      "subjectCode": "CS 311",
+      "section": "A",
+      "actualPassingRate": 69.23,
+      "predictedPassingRate": 73.07,
+      "baselinePassingRate": 76.92
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 1,
+      "program": "BSCS",
+      "subjectCode": "CS 311",
+      "section": "B",
+      "actualPassingRate": 73.53,
+      "predictedPassingRate": 72.77,
+      "baselinePassingRate": 73.68
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 1,
+      "program": "BSCS",
+      "subjectCode": "CS 322",
+      "section": "A",
+      "actualPassingRate": 83.33,
+      "predictedPassingRate": 64.9,
+      "baselinePassingRate": 64.52
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 1,
+      "program": "BSCS",
+      "subjectCode": "CS 322",
+      "section": "B",
+      "actualPassingRate": 67.74,
+      "predictedPassingRate": 70.13,
+      "baselinePassingRate": 70.37
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 1,
+      "program": "BSCS",
+      "subjectCode": "CS 324",
+      "section": "A",
+      "actualPassingRate": 67.65,
+      "predictedPassingRate": 71.43,
+      "baselinePassingRate": 69.7
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 1,
+      "program": "BSCS",
+      "subjectCode": "CS 324",
+      "section": "B",
+      "actualPassingRate": 66.67,
+      "predictedPassingRate": 77.29,
+      "baselinePassingRate": 75.86
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 1,
+      "program": "BSIT",
+      "subjectCode": "IT 211",
+      "section": "A",
+      "actualPassingRate": 78.57,
+      "predictedPassingRate": 88.54,
+      "baselinePassingRate": 87.88
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 1,
+      "program": "BSIT",
+      "subjectCode": "IT 211",
+      "section": "B",
+      "actualPassingRate": 92.68,
+      "predictedPassingRate": 93.36,
+      "baselinePassingRate": 97.62
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 1,
+      "program": "BSIT",
+      "subjectCode": "IT 222",
+      "section": "A",
+      "actualPassingRate": 76.32,
+      "predictedPassingRate": 80.64,
+      "baselinePassingRate": 82.86
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 1,
+      "program": "BSIT",
+      "subjectCode": "IT 222",
+      "section": "B",
+      "actualPassingRate": 84.38,
+      "predictedPassingRate": 82.83,
+      "baselinePassingRate": 83.33
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 1,
+      "program": "BSIT",
+      "subjectCode": "IT 314",
+      "section": "A",
+      "actualPassingRate": 79.07,
+      "predictedPassingRate": 79.29,
+      "baselinePassingRate": 80.0
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 1,
+      "program": "BSIT",
+      "subjectCode": "IT 314",
+      "section": "B",
+      "actualPassingRate": 58.54,
+      "predictedPassingRate": 63.03,
+      "baselinePassingRate": 65.71
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 1,
+      "program": "BSIT",
+      "subjectCode": "IT 325",
+      "section": "A",
+      "actualPassingRate": 86.67,
+      "predictedPassingRate": 81.85,
+      "baselinePassingRate": 84.0
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 1,
+      "program": "BSIT",
+      "subjectCode": "IT 325",
+      "section": "B",
+      "actualPassingRate": 82.5,
+      "predictedPassingRate": 82.63,
+      "baselinePassingRate": 79.55
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 1,
+      "program": "BSIT",
+      "subjectCode": "IT 326",
+      "section": "A",
+      "actualPassingRate": 97.22,
+      "predictedPassingRate": 90.6,
+      "baselinePassingRate": 94.44
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 1,
+      "program": "BSIT",
+      "subjectCode": "IT 326",
+      "section": "B",
+      "actualPassingRate": 77.14,
+      "predictedPassingRate": 88.75,
+      "baselinePassingRate": 87.88
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 2,
+      "program": "BSCS",
+      "subjectCode": "CS 212",
+      "section": "A",
+      "actualPassingRate": 83.33,
+      "predictedPassingRate": 75.78,
+      "baselinePassingRate": 75.68
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 2,
+      "program": "BSCS",
+      "subjectCode": "CS 212",
+      "section": "B",
+      "actualPassingRate": 63.33,
+      "predictedPassingRate": 64.63,
+      "baselinePassingRate": 63.64
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 2,
+      "program": "BSCS",
+      "subjectCode": "CS 223",
+      "section": "A",
+      "actualPassingRate": 88.37,
+      "predictedPassingRate": 90.62,
+      "baselinePassingRate": 88.89
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 2,
+      "program": "BSCS",
+      "subjectCode": "CS 223",
+      "section": "B",
+      "actualPassingRate": 92.11,
+      "predictedPassingRate": 83.79,
+      "baselinePassingRate": 80.65
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 2,
+      "program": "BSCS",
+      "subjectCode": "CS 311",
+      "section": "A",
+      "actualPassingRate": 70.59,
+      "predictedPassingRate": 70.66,
+      "baselinePassingRate": 69.23
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 2,
+      "program": "BSCS",
+      "subjectCode": "CS 311",
+      "section": "B",
+      "actualPassingRate": 75.68,
+      "predictedPassingRate": 73.07,
+      "baselinePassingRate": 73.53
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 2,
+      "program": "BSCS",
+      "subjectCode": "CS 322",
+      "section": "A",
+      "actualPassingRate": 83.33,
+      "predictedPassingRate": 80.88,
+      "baselinePassingRate": 83.33
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 2,
+      "program": "BSCS",
+      "subjectCode": "CS 322",
+      "section": "B",
+      "actualPassingRate": 78.38,
+      "predictedPassingRate": 70.9,
+      "baselinePassingRate": 67.74
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 2,
+      "program": "BSCS",
+      "subjectCode": "CS 324",
+      "section": "A",
+      "actualPassingRate": 70.59,
+      "predictedPassingRate": 68.1,
+      "baselinePassingRate": 67.65
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 2,
+      "program": "BSCS",
+      "subjectCode": "CS 324",
+      "section": "B",
+      "actualPassingRate": 67.57,
+      "predictedPassingRate": 65.32,
+      "baselinePassingRate": 66.67
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 2,
+      "program": "BSIT",
+      "subjectCode": "IT 211",
+      "section": "A",
+      "actualPassingRate": 80.0,
+      "predictedPassingRate": 79.43,
+      "baselinePassingRate": 78.57
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 2,
+      "program": "BSIT",
+      "subjectCode": "IT 211",
+      "section": "B",
+      "actualPassingRate": 100.0,
+      "predictedPassingRate": 91.85,
+      "baselinePassingRate": 92.68
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 2,
+      "program": "BSIT",
+      "subjectCode": "IT 222",
+      "section": "A",
+      "actualPassingRate": 77.14,
+      "predictedPassingRate": 75.0,
+      "baselinePassingRate": 76.32
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 2,
+      "program": "BSIT",
+      "subjectCode": "IT 222",
+      "section": "B",
+      "actualPassingRate": 78.38,
+      "predictedPassingRate": 84.72,
+      "baselinePassingRate": 84.38
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 2,
+      "program": "BSIT",
+      "subjectCode": "IT 314",
+      "section": "A",
+      "actualPassingRate": 78.72,
+      "predictedPassingRate": 80.12,
+      "baselinePassingRate": 79.07
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 2,
+      "program": "BSIT",
+      "subjectCode": "IT 314",
+      "section": "B",
+      "actualPassingRate": 60.98,
+      "predictedPassingRate": 65.67,
+      "baselinePassingRate": 58.54
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 2,
+      "program": "BSIT",
+      "subjectCode": "IT 325",
+      "section": "A",
+      "actualPassingRate": 91.43,
+      "predictedPassingRate": 86.64,
+      "baselinePassingRate": 86.67
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 2,
+      "program": "BSIT",
+      "subjectCode": "IT 325",
+      "section": "B",
+      "actualPassingRate": 75.61,
+      "predictedPassingRate": 85.48,
+      "baselinePassingRate": 82.5
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 2,
+      "program": "BSIT",
+      "subjectCode": "IT 326",
+      "section": "A",
+      "actualPassingRate": 94.29,
+      "predictedPassingRate": 92.64,
+      "baselinePassingRate": 97.22
+    },
+    {
+      "targetYear": 2024,
+      "targetSemester": 2,
+      "program": "BSIT",
+      "subjectCode": "IT 326",
+      "section": "B",
+      "actualPassingRate": 75.86,
+      "predictedPassingRate": 77.2,
+      "baselinePassingRate": 77.14
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 1,
+      "program": "BSCS",
+      "subjectCode": "CS 212",
+      "section": "A",
+      "actualPassingRate": 85.71,
+      "predictedPassingRate": 77.91,
+      "baselinePassingRate": 83.33
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 1,
+      "program": "BSCS",
+      "subjectCode": "CS 212",
+      "section": "B",
+      "actualPassingRate": 63.16,
+      "predictedPassingRate": 63.68,
+      "baselinePassingRate": 63.33
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 1,
+      "program": "BSCS",
+      "subjectCode": "CS 223",
+      "section": "A",
+      "actualPassingRate": 84.38,
+      "predictedPassingRate": 90.41,
+      "baselinePassingRate": 88.37
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 1,
+      "program": "BSCS",
+      "subjectCode": "CS 223",
+      "section": "B",
+      "actualPassingRate": 90.24,
+      "predictedPassingRate": 89.01,
+      "baselinePassingRate": 92.11
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 1,
+      "program": "BSCS",
+      "subjectCode": "CS 311",
+      "section": "A",
+      "actualPassingRate": 71.88,
+      "predictedPassingRate": 72.38,
+      "baselinePassingRate": 70.59
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 1,
+      "program": "BSCS",
+      "subjectCode": "CS 311",
+      "section": "B",
+      "actualPassingRate": 73.17,
+      "predictedPassingRate": 73.31,
+      "baselinePassingRate": 75.68
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 1,
+      "program": "BSCS",
+      "subjectCode": "CS 322",
+      "section": "A",
+      "actualPassingRate": 81.08,
+      "predictedPassingRate": 78.43,
+      "baselinePassingRate": 83.33
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 1,
+      "program": "BSCS",
+      "subjectCode": "CS 322",
+      "section": "B",
+      "actualPassingRate": 83.87,
+      "predictedPassingRate": 75.96,
+      "baselinePassingRate": 78.38
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 1,
+      "program": "BSCS",
+      "subjectCode": "CS 324",
+      "section": "A",
+      "actualPassingRate": 63.64,
+      "predictedPassingRate": 72.0,
+      "baselinePassingRate": 70.59
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 1,
+      "program": "BSCS",
+      "subjectCode": "CS 324",
+      "section": "B",
+      "actualPassingRate": 71.88,
+      "predictedPassingRate": 67.82,
+      "baselinePassingRate": 67.57
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 1,
+      "program": "BSIT",
+      "subjectCode": "IT 211",
+      "section": "A",
+      "actualPassingRate": 77.14,
+      "predictedPassingRate": 78.54,
+      "baselinePassingRate": 80.0
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 1,
+      "program": "BSIT",
+      "subjectCode": "IT 211",
+      "section": "B",
+      "actualPassingRate": 91.18,
+      "predictedPassingRate": 95.48,
+      "baselinePassingRate": 100.0
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 1,
+      "program": "BSIT",
+      "subjectCode": "IT 222",
+      "section": "A",
+      "actualPassingRate": 70.37,
+      "predictedPassingRate": 77.74,
+      "baselinePassingRate": 77.14
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 1,
+      "program": "BSIT",
+      "subjectCode": "IT 222",
+      "section": "B",
+      "actualPassingRate": 77.14,
+      "predictedPassingRate": 80.37,
+      "baselinePassingRate": 78.38
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 1,
+      "program": "BSIT",
+      "subjectCode": "IT 314",
+      "section": "A",
+      "actualPassingRate": 80.95,
+      "predictedPassingRate": 78.59,
+      "baselinePassingRate": 78.72
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 1,
+      "program": "BSIT",
+      "subjectCode": "IT 314",
+      "section": "B",
+      "actualPassingRate": 59.46,
+      "predictedPassingRate": 65.34,
+      "baselinePassingRate": 60.98
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 1,
+      "program": "BSIT",
+      "subjectCode": "IT 325",
+      "section": "A",
+      "actualPassingRate": 80.56,
+      "predictedPassingRate": 88.01,
+      "baselinePassingRate": 91.43
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 1,
+      "program": "BSIT",
+      "subjectCode": "IT 325",
+      "section": "B",
+      "actualPassingRate": 74.36,
+      "predictedPassingRate": 75.54,
+      "baselinePassingRate": 75.61
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 1,
+      "program": "BSIT",
+      "subjectCode": "IT 326",
+      "section": "A",
+      "actualPassingRate": 93.75,
+      "predictedPassingRate": 90.23,
+      "baselinePassingRate": 94.29
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 1,
+      "program": "BSIT",
+      "subjectCode": "IT 326",
+      "section": "B",
+      "actualPassingRate": 71.11,
+      "predictedPassingRate": 76.67,
+      "baselinePassingRate": 75.86
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 2,
+      "program": "BSCS",
+      "subjectCode": "CS 212",
+      "section": "A",
+      "actualPassingRate": 87.1,
+      "predictedPassingRate": 83.05,
+      "baselinePassingRate": 85.71
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 2,
+      "program": "BSCS",
+      "subjectCode": "CS 212",
+      "section": "B",
+      "actualPassingRate": 64.86,
+      "predictedPassingRate": 67.5,
+      "baselinePassingRate": 63.16
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 2,
+      "program": "BSCS",
+      "subjectCode": "CS 223",
+      "section": "A",
+      "actualPassingRate": 94.74,
+      "predictedPassingRate": 84.44,
+      "baselinePassingRate": 84.38
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 2,
+      "program": "BSCS",
+      "subjectCode": "CS 223",
+      "section": "B",
+      "actualPassingRate": 97.56,
+      "predictedPassingRate": 84.11,
+      "baselinePassingRate": 90.24
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 2,
+      "program": "BSCS",
+      "subjectCode": "CS 311",
+      "section": "A",
+      "actualPassingRate": 64.52,
+      "predictedPassingRate": 72.74,
+      "baselinePassingRate": 71.88
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 2,
+      "program": "BSCS",
+      "subjectCode": "CS 311",
+      "section": "B",
+      "actualPassingRate": 71.43,
+      "predictedPassingRate": 69.18,
+      "baselinePassingRate": 73.17
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 2,
+      "program": "BSCS",
+      "subjectCode": "CS 322",
+      "section": "A",
+      "actualPassingRate": 81.58,
+      "predictedPassingRate": 83.06,
+      "baselinePassingRate": 81.08
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 2,
+      "program": "BSCS",
+      "subjectCode": "CS 322",
+      "section": "B",
+      "actualPassingRate": 85.71,
+      "predictedPassingRate": 81.71,
+      "baselinePassingRate": 83.87
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 2,
+      "program": "BSCS",
+      "subjectCode": "CS 324",
+      "section": "A",
+      "actualPassingRate": 71.43,
+      "predictedPassingRate": 63.33,
+      "baselinePassingRate": 63.64
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 2,
+      "program": "BSCS",
+      "subjectCode": "CS 324",
+      "section": "B",
+      "actualPassingRate": 74.19,
+      "predictedPassingRate": 71.84,
+      "baselinePassingRate": 71.88
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 2,
+      "program": "BSIT",
+      "subjectCode": "IT 211",
+      "section": "A",
+      "actualPassingRate": 84.62,
+      "predictedPassingRate": 78.86,
+      "baselinePassingRate": 77.14
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 2,
+      "program": "BSIT",
+      "subjectCode": "IT 211",
+      "section": "B",
+      "actualPassingRate": 94.59,
+      "predictedPassingRate": 89.06,
+      "baselinePassingRate": 91.18
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 2,
+      "program": "BSIT",
+      "subjectCode": "IT 222",
+      "section": "A",
+      "actualPassingRate": 75.0,
+      "predictedPassingRate": 72.08,
+      "baselinePassingRate": 70.37
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 2,
+      "program": "BSIT",
+      "subjectCode": "IT 222",
+      "section": "B",
+      "actualPassingRate": 81.82,
+      "predictedPassingRate": 79.58,
+      "baselinePassingRate": 77.14
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 2,
+      "program": "BSIT",
+      "subjectCode": "IT 314",
+      "section": "A",
+      "actualPassingRate": 81.4,
+      "predictedPassingRate": 81.42,
+      "baselinePassingRate": 80.95
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 2,
+      "program": "BSIT",
+      "subjectCode": "IT 314",
+      "section": "B",
+      "actualPassingRate": 66.67,
+      "predictedPassingRate": 64.68,
+      "baselinePassingRate": 59.46
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 2,
+      "program": "BSIT",
+      "subjectCode": "IT 325",
+      "section": "A",
+      "actualPassingRate": 72.22,
+      "predictedPassingRate": 80.01,
+      "baselinePassingRate": 80.56
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 2,
+      "program": "BSIT",
+      "subjectCode": "IT 325",
+      "section": "B",
+      "actualPassingRate": 70.59,
+      "predictedPassingRate": 74.41,
+      "baselinePassingRate": 74.36
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 2,
+      "program": "BSIT",
+      "subjectCode": "IT 326",
+      "section": "A",
+      "actualPassingRate": 96.77,
+      "predictedPassingRate": 92.15,
+      "baselinePassingRate": 93.75
+    },
+    {
+      "targetYear": 2025,
+      "targetSemester": 2,
+      "program": "BSIT",
+      "subjectCode": "IT 326",
+      "section": "B",
+      "actualPassingRate": 76.92,
+      "predictedPassingRate": 72.51,
+      "baselinePassingRate": 71.11
+    }
+  ]
+}

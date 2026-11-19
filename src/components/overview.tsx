@@ -14,6 +14,7 @@ import { Status } from "@/components/records";
 import { Alert, Button, Card, CardContent, CardHeader, CardTitle } from "@/components/ui/primitives";
 import { DashboardSelect } from "@/components/ui/select";
 import { OverviewFilters } from "@/components/overview-filters";
+import { PredictiveAnalytics } from "@/components/predictive-analytics";
 import { type Dimension, type Period, type Section } from "@/data/academic";
 import {
   assessSections, averageSete, compare, formatPercent, formatScore, integer, percent, previousReportingPeriod, reviewTones, scopedRows,
@@ -216,6 +217,6 @@ export function Overview() {
         <SeteDistribution assessments={assessments} onOpen={showRecords} />
       </div>
     </section>
-
+    <PredictiveAnalytics />
   </div>;
 }
