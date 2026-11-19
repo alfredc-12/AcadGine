@@ -62,7 +62,7 @@ export function useReportingFilter<T>(initial: T) {
 
 function AcadgineMark() {
   return <span className="brand-mark" aria-hidden="true">
-    <Image src="/acadgine-logo.png" width={1536} height={1024} alt="" loading="eager" unoptimized />
+    <Image src="/acadgine-logo.png" width={1254} height={1254} alt="" loading="eager" unoptimized />
   </span>;
 }
 

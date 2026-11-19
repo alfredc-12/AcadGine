@@ -132,7 +132,7 @@ small { font-size: 12px; }
 /* Frame the original artwork inside its transparent margins. */
 .brand-mark > img {
   position: absolute; inset: 50% auto auto 50%; transform: translate(-50%, -50%);
-  width: 62px; max-width: none; height: auto;
+  width: 42px; max-width: none; height: auto;
 }
 :root[data-theme="dark"] .brand-mark { background: #f5f2f0; }
 .brand-copy { display: grid; line-height: 1.15; min-width: 0; }
@@ -655,7 +655,7 @@ td small { display: block; color: var(--muted); font-size: 11px; }
 .welcome-brand strong { font-size: 14px; font-weight: 710; }
 .welcome-brand small { margin-top: 3px; color: var(--muted); }
 .welcome-brand .brand-mark { width: 42px; height: 38px; }
-.welcome-brand .brand-mark > img { width: 68px; }
+.welcome-brand .brand-mark > img { width: 46px; }
 .welcome-heading { margin-top: 15px; }
 .welcome-heading h2 { font-size: 26px; }
 .welcome-modal { animation: welcome-entrance 250ms var(--ease) both; }
