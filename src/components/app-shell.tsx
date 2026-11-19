@@ -212,7 +212,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="topbar-inner">
         <div className="brand">
           <AcadgineMark />
-          <span className="brand-copy"><strong>Acadgine</strong><small>Academic Analytics &amp; Intelligent Decision Support</small></span>
+          <span className="brand-copy"><strong>ACADGINE</strong><small>Academic Analytics &amp; Intelligent Decision Support</small></span>
         </div>
         <div className="header-actions">
           <Button ref={tourButton} variant="ghost" size="icon" className="header-tour"

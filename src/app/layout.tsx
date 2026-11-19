@@ -5,7 +5,7 @@ import { AppShell } from "@/components/app-shell";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "Acadgine", template: "%s · Acadgine" },
+  title: { default: "ACADGINE", template: "%s · ACADGINE" },
   description: "Academic analytics and decision support for Program Chairs using fictional demonstration records.",
 };
 
