@@ -1,7 +1,7 @@
 "use client";
 
-import { ArrowUpRight, ChevronRight, Info } from "lucide-react";
-import { type ReactNode, useEffect, useId, useState } from "react";
+import { ArrowUpRight, ChevronRight, Info, Minus, Plus } from "lucide-react";
+import { type ReactNode, useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Scatter, ScatterChart,
   Tooltip, XAxis, YAxis, type ScatterShapeProps,
@@ -10,7 +10,7 @@ import { useReportingFilter } from "@/components/app-shell";
 import { courseByCode, dimensions, facultyById, periods, type Dimension, type Period, type Section } from "@/data/academic";
 import { averageSete, compare, formatPercent, formatScore, integer, previousReportingPeriod, scopedRows, sectionTitle, signed, summarize,
   reviewTones, type Scope, type SectionAssessment } from "@/lib/analytics";
-import { Card, CardContent, CardHeader, CardTitle, Empty } from "@/components/ui/primitives";
+import { Button, Card, CardContent, CardHeader, CardTitle, Empty } from "@/components/ui/primitives";
 import { DashboardSelect } from "@/components/ui/select";
 
 export function ChartPanel({ title, controls, children, className }: {
@@ -27,8 +27,26 @@ export function ChartPanel({ title, controls, children, className }: {
 }
 
 const ratingTicks = [1, 2, 3, 4, 5];
-const trendRatingTicks = Array.from({ length: 17 }, (_, index) => 1 + index / 4);
+const ratingZoomSteps = [0.5, 0.25, 0.1, 0.05];
 const axis = { fill: "var(--muted)", fontSize: 11, fontFamily: "inherit" };
+
+function trendScales(ratings: number[]) {
+  const scales = [{ ticks: ratingTicks, decimals: 0 }];
+  if (ratings.length === 0) return scales;
+
+  const lowest = Math.min(...ratings);
+  const highest = Math.max(...ratings);
+  const center = (lowest + highest) / 2;
+
+  for (const step of ratingZoomSteps) {
+    const span = step * (ratingTicks.length - 1);
+    const lowerTick = Math.max(1, Math.min(5 - span, Math.round((center - span / 2) / step) * step));
+    const ticks = ratingTicks.map((tick) => Number((lowerTick + (tick - 1) * step).toFixed(2)));
+    if (lowest < ticks[0] || highest > ticks[ticks.length - 1]) break;
+    scales.push({ ticks, decimals: step === 0.5 || step === 0.1 ? 1 : 2 });
+  }
+  return scales;
+}
 
 function useChartMotion() {
   const [animate, setAnimate] = useState(false);
@@ -42,12 +60,15 @@ function useChartMotion() {
   return animate;
 }
 
-function ChartReadout({ children }: { children: ReactNode }) {
+function ChartReadout({ children, controls }: { children: ReactNode; controls?: ReactNode }) {
   const [expanded, setExpanded] = useState(false);
   return <div className="chart-readout no-print">
-    <button type="button" className="text-control" aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}>
-      {expanded ? "Hide data" : "View data"} <ChevronRight aria-hidden="true" />
-    </button>
+    <div className="chart-readout-actions">
+      <button type="button" className="text-control" aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}>
+        {expanded ? "Hide data" : "View data"} <ChevronRight aria-hidden="true" />
+      </button>
+      {controls}
+    </div>
     {expanded && <div className="point-list">{children}</div>}
   </div>;
 }
@@ -59,18 +80,49 @@ export function SeteTrend({ scope, period, course, section, onOpen }: {
   onOpen: (period: Period, rows: Section[], dimension: Dimension | "all") => void;
 }) {
   const [dimension, setDimension] = useReportingFilter<Dimension | "all">("all");
+  const [zoom, setZoom] = useReportingFilter(0);
   const animate = useChartMotion();
-  const observations = periods.map((item) => {
-    const rows = scopedRows({ ...scope, period: item.id }, course, section);
-    const { responses, passing } = summarize(rows);
-    return { period: item, rows, label: item.short, value: averageSete(rows, dimension), responses, passing };
-  });
-  const valuesByPeriod = new Map(observations.map((point) => [point.period.id, point.value]));
-  const series: TrendPoint[] = observations.map((point) => {
-    const previous = previousReportingPeriod(point.period.id);
-    return { ...point, change: compare(point.value, previous ? valuesByPeriod.get(previous.id) ?? null : null, 2) };
-  });
-  const hasData = series.some((point) => point.value !== null);
+  const plot = useRef<HTMLDivElement>(null);
+  const lastWheel = useRef(-Infinity);
+  const series: TrendPoint[] = useMemo(() => {
+    const observations = periods.map((item) => {
+      const rows = scopedRows({ ...scope, period: item.id }, course, section);
+      const { responses, passing } = summarize(rows);
+      return { period: item, rows, label: item.short, value: averageSete(rows, dimension), responses, passing };
+    });
+    const valuesByPeriod = new Map(observations.map((point) => [point.period.id, point.value]));
+    return observations.map((point) => {
+      const previous = previousReportingPeriod(point.period.id);
+      return { ...point, change: compare(point.value, previous ? valuesByPeriod.get(previous.id) ?? null : null, 2) };
+    });
+  }, [scope, course, section, dimension]);
+  const ratings = series.flatMap(({ value }) => value === null ? [] : [value]);
+  const hasData = ratings.length > 0;
+  const scales = trendScales(ratings);
+  const maxZoom = scales.length - 1;
+  const level = Math.min(zoom, maxZoom);
+  const { ticks, decimals } = scales[level];
+  const lower = ticks[0];
+  const upper = ticks[ticks.length - 1];
+
+  useEffect(() => {
+    const element = plot.current;
+    if (!element) return;
+
+    function wheel(event: WheelEvent) {
+      if (!event.deltaY || event.ctrlKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
+      const next = Math.max(0, Math.min(maxZoom, level + (event.deltaY < 0 ? 1 : -1)));
+      if (next === level) return;
+
+      event.preventDefault();
+      if (event.timeStamp - lastWheel.current < 140) return;
+      lastWheel.current = event.timeStamp;
+      setZoom(next);
+    }
+
+    element.addEventListener("wheel", wheel, { passive: false });
+    return () => element.removeEventListener("wheel", wheel);
+  }, [hasData, level, maxZoom, setZoom]);
 
   function openPoint(index: number) {
     const entry = series[index];
@@ -85,17 +137,12 @@ export function SeteTrend({ scope, period, course, section, onOpen }: {
       <span className="chart-unit">Rating / 5</span>
       <span className="trend-period">Selected · {period.short}</span>
     </div>
-    {hasData ? <div className="trend-plot" aria-label="SETE ratings by semester on a 1–5 scale">
-      <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 550, height: 315 }}>
+    {hasData ? <div ref={plot} className="trend-plot" aria-label="SETE ratings by semester. Scroll over the plot to zoom vertically.">
+      <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 550, height: 172 }}>
         <LineChart data={series} margin={{ top: 12, right: 15, left: 0, bottom: 5 }} accessibilityLayer>
-          <CartesianGrid vertical={false} horizontalValues={ratingTicks} stroke="var(--chart-grid)" />
-          <YAxis ticks={trendRatingTicks} domain={[1, 5]} interval={0} tickLine={false} axisLine={false}
-            width={39} allowDataOverflow tick={({ x, y, payload, textAnchor }) => (
-              <text x={x} y={y} dy="0.32em" textAnchor={textAnchor} {...axis}
-                className={Number.isInteger(payload.value) ? undefined : "trend-quarter-tick"}>
-                {Number(payload.value).toFixed(2)}
-              </text>
-            )} />
+          <CartesianGrid vertical={false} stroke="var(--chart-grid)" />
+          <YAxis ticks={ticks} domain={[lower, upper]} tick={axis} tickFormatter={(value: number) => value.toFixed(decimals)}
+            tickLine={false} axisLine={false} width={36} allowDataOverflow />
           <XAxis dataKey="label" tick={axis} tickLine={false} axisLine={false} minTickGap={12} tickMargin={8} />
           <ReferenceLine x={period.short} stroke="var(--chart-accent)" strokeOpacity={0.65} strokeDasharray="3 4" />
           <Tooltip cursor={{ stroke: "var(--chart-grid)" }} content={({ active, payload }) => {
@@ -127,7 +174,15 @@ export function SeteTrend({ scope, period, course, section, onOpen }: {
         </LineChart>
       </ResponsiveContainer>
     </div> : <Empty>No SETE observations for this selection.</Empty>}
-    {hasData && <ChartReadout>{series.map((point, index) => {
+    {hasData && <ChartReadout controls={
+      <div className="chart-zoom" role="group" aria-label="Vertical zoom">
+        <span className="sr-only" role="status">Vertical scale {lower.toFixed(decimals)} to {upper.toFixed(decimals)}</span>
+        <Button variant="outline" size="icon" aria-label="Zoom out vertically" title="Zoom out vertically" disabled={level === 0}
+          onClick={() => setZoom(level - 1)}><Minus aria-hidden="true" /></Button>
+        <Button variant="outline" size="icon" aria-label="Zoom in vertically" title="Zoom in vertically" disabled={level === maxZoom}
+          onClick={() => setZoom(level + 1)}><Plus aria-hidden="true" /></Button>
+      </div>
+    }>{series.map((point, index) => {
       const values = <><span>{point.label}</span><span>{formatScore(point.value)} SETE · {formatPercent(point.passing)} passing</span>
         <small>{point.responses} responses · {point.change === null ? "change N/A" : `${signed(point.change, 2)} pts vs previous`}</small></>;
       return point.value !== null ? <button type="button" className="point-row" key={point.label} onClick={() => openPoint(index)}>

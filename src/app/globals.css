@@ -389,7 +389,7 @@ small { font-size: 12px; }
 .chart-unit { color: var(--muted); font-size: 11px; white-space: nowrap; }
 .trend-meta { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 10px; }
 .trend-period { color: var(--accent); font-size: 11px; font-weight: 620; }
-.trend-plot { width: 100%; height: 315px; }
+.trend-plot { width: 100%; height: 187px; }
 .chart-legend { display: flex; align-items: center; flex-wrap: wrap; gap: 5px 12px; font-size: 11px; color: var(--muted); }
 .chart-legend span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
 .chart-legend i { width: 15px; height: 0; border-top: 2px solid; }
@@ -403,6 +403,9 @@ small { font-size: 12px; }
 .chart-tooltip > strong { display: block; margin-bottom: 3px; }
 .chart-tooltip small { display: block; margin-top: 3px; color: var(--muted); }
 .chart-readout { margin-top: 2px; }
+.chart-readout-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.chart-zoom { display: inline-flex; align-items: center; gap: 4px; }
+.chart-zoom .ui-button { width: 30px; height: 28px; }
 .text-control { display: inline-flex; align-items: center; min-height: 26px; gap: 4px; color: var(--muted); font-size: 12px; font-weight: 580; }
 .text-control:hover { color: var(--accent); }
 .text-control > svg { width: 13px; height: 13px; transition: transform 150ms var(--ease); }
@@ -929,7 +932,6 @@ td small { display: block; color: var(--muted); font-size: 11px; }
   .overview .card-content { padding: 0 8px 7px; }
   .overview .card-header :is(h2, h3) { font-size: 14px; }
   .overview .trend-plot { height: 123px; }
-  .overview .trend-quarter-tick { display: none; }
   .overview .recharts-surface { width: 100%; height: 100%; }
   .overview .section-bar-row { min-height: 27px; }
   .overview .scatter-plot { height: 145px; }
