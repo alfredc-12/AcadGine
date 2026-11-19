@@ -15,8 +15,8 @@ export function WelcomeDialog({ open, mark, onSkip, onStart, restoreFocus }: {
 }) {
   const [starting, setStarting] = useState(false);
 
-  return <Dialog.Root open={open && !starting} onOpenChange={(next) => { if (!next) onSkip(); }}>
-    <ModalSurface className="welcome-modal" onCloseAutoFocus={(event) => {
+  return <Dialog.Root open={open && !starting} onOpenChange={(next) => { if (!next && !starting) onSkip(); }}>
+    <ModalSurface className="welcome-modal" clearBackdrop onCloseAutoFocus={(event) => {
       event.preventDefault();
       if (starting) {
         setStarting(false);
@@ -46,7 +46,7 @@ export function WelcomeDialog({ open, mark, onSkip, onStart, restoreFocus }: {
       </div>
       <div className="modal-actions">
         <Dialog.Close asChild><Button variant="ghost">Skip</Button></Dialog.Close>
-        <Button onClick={() => setStarting(true)}>
+        <Button onClick={() => setStarting(true)} disabled={starting}>
           Start Dashboard Tour <ArrowRight aria-hidden="true" />
         </Button>
       </div>

@@ -74,6 +74,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [detailOpen, setDetailOpen] = useState(false);
   const [methodologyOpen, setMethodologyOpen] = useState(false);
   const [onboarding, setOnboarding] = useState<"idle" | "welcome" | "tour">("idle");
+  const [onboardingOutcome, setOnboardingOutcome] = useState<"skipped" | "completed" | null>(null);
   const [tourStep, setTourStep] = useState(0);
   const [tourRun, setTourRun] = useState(0);
   const detailTrigger = useRef<HTMLElement | null>(null);
@@ -99,8 +100,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   function startTour() {
+    if (onboardingOutcome) return;
     setTourStep(0);
-    setTourRun((run) => run + 1);
+    if (onboarding !== "welcome") setTourRun((run) => run + 1);
     setOnboarding("tour");
   }
 
@@ -110,7 +112,10 @@ export function AppShell({ children }: { children: ReactNode }) {
     else main.current?.focus({ preventScroll: true });
   }
 
-  function closeOnboarding(outcome: "skipped" | "completed") {
+  function finishOnboarding() {
+    if (!onboardingOutcome) return;
+    const outcome = onboardingOutcome;
+    setOnboardingOutcome(null);
     setOnboarding("idle");
     try {
       if (outcome === "completed" || localStorage.getItem(onboardingKey) !== "completed") {
@@ -192,11 +197,13 @@ export function AppShell({ children }: { children: ReactNode }) {
       {children}
     </main>
     <DashboardFooter onOpenChange={setMethodologyOpen} />
-    <WelcomeDialog open={onboarding === "welcome"} mark={<AcadgineMark />} onStart={startTour}
-      onSkip={() => closeOnboarding("skipped")} restoreFocus={restoreTourFocus} />
-    {onboarding === "tour" && <DashboardTour key={tourRun} index={tourStep} onStepChange={setTourStep}
-      paused={detailOpen || methodologyOpen} canvasRef={main} headerRef={header}
-      onExit={() => closeOnboarding("skipped")} onFinish={() => closeOnboarding("completed")} />}
+    <WelcomeDialog open={onboarding === "welcome" && !onboardingOutcome} mark={<AcadgineMark />} onStart={startTour}
+      onSkip={() => setOnboardingOutcome((outcome) => outcome ?? "skipped")} restoreFocus={restoreTourFocus} />
+    {onboarding !== "idle" && <DashboardTour run={tourRun} index={tourStep} onStepChange={setTourStep}
+      active={onboarding === "tour"} paused={detailOpen || methodologyOpen} closing={Boolean(onboardingOutcome)}
+      canvasRef={main} headerRef={header} onExited={finishOnboarding}
+      onExit={() => setOnboardingOutcome((outcome) => outcome ?? "skipped")}
+      onFinish={() => setOnboardingOutcome((outcome) => outcome ?? "completed")} />}
 
     <Sheet open={detailOpen} onOpenChange={setDetailOpen} title={detail?.title ?? "Details"}
       description={detail?.description} onRestoreFocus={() => {
