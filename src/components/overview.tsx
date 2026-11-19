@@ -24,7 +24,7 @@ function OverviewFilters() {
   const { scope, course, section, availableSections, setProgram, setCourse, setSection, resetFilters } = useDashboard();
   const subjects = courses.filter(({ program }) => scope.program === "all" || program === scope.program);
 
-  return <div className="overview-filters no-print" role="group" aria-label="Dashboard filters">
+  return <div className="overview-filters no-print" role="group" aria-label="Dashboard filters" data-tour-target="filters" tabIndex={-1}>
     <div className="filter-field">
       <label htmlFor="program-filter">Program</label>
       <DashboardSelect<Scope["program"]> id="program-filter" label="Program" value={scope.program} onChange={setProgram}
@@ -192,7 +192,7 @@ export function Overview() {
     <OverviewFilters />
     {priority && <PriorityAlert notice={priority} more={alerts.length - 1} onOpen={() => showFinding(priority)} onMore={showAlerts} />}
 
-    <section className="kpi-grid" aria-label="Key performance indicators">
+    <section className="kpi-grid" aria-label="Key performance indicators" data-tour-target="kpis" tabIndex={-1}>
       {cards.map(({ id, title, icon: Icon, number, unit, change, decimals, deltaUnit, status, tone, onOpen }) => {
         const Trend = change === null || change === 0 ? Minus : change < 0 ? ArrowDownRight : ArrowUpRight;
         const delta = change === null ? "" : `${signed(change, decimals)} ${deltaUnit}`;
@@ -212,7 +212,7 @@ export function Overview() {
       })}
     </section>
 
-    <section className="dashboard-section performance-section" aria-labelledby="performance-title">
+    <section className="dashboard-section performance-section" aria-labelledby="performance-title" data-tour-target="analytics" tabIndex={-1}>
       <header className="section-heading"><h2 id="performance-title">SETE &amp; Academic Analytics</h2></header>
       <div className="dashboard-grid chart-grid">
         <div className="span-seven"><SeteTrend scope={scope} period={period} course={course} section={section} onOpen={showTrendData} /></div>
@@ -221,7 +221,7 @@ export function Overview() {
       </div>
     </section>
 
-    <section className="dashboard-section section-reveal no-print" aria-labelledby="records-title">
+    <section className="dashboard-section section-reveal no-print" aria-labelledby="records-title" data-tour-target="sections" tabIndex={-1}>
       <header className="section-heading"><h2 id="records-title">Section Performance</h2></header>
       <Card className="section-records"><CardContent>
         <SectionPerformanceTable key={filterVersion} assessments={records} onOpen={showSection}
@@ -235,7 +235,7 @@ export function Overview() {
     <TeachingEffectiveness rows={rows} assessments={assessments} metrics={metrics} onOpenDimension={(dimension, name, summary) =>
       showRecords(name, assessments.filter(({ row }) => row.scores && row.responses > 0), summary, { dimension })} />
 
-    <section className="dashboard-section section-reveal no-print" aria-labelledby="sete-insights-title">
+    <section className="dashboard-section section-reveal no-print" aria-labelledby="sete-insights-title" data-tour-target="insights" tabIndex={-1}>
       <header className="section-heading"><h2 id="sete-insights-title">SETE Insights &amp; Actions</h2></header>
       <div className="decision-grid">
         <Insights findings={insights} onOpen={showFinding} />
@@ -243,15 +243,5 @@ export function Overview() {
       </div>
     </section>
 
-    <footer className="dashboard-method no-print">
-      <details className="disclosure">
-        <summary><span><Info aria-hidden="true" /> Simulated data &amp; review rules</span><ChevronRight aria-hidden="true" /></summary>
-        <div className="disclosure-body">
-          <p>Fictional SETE responses and simulated Student and Faculty Portal records. Passing rates use finalized enrollments. SETE measures student evaluations and uses response-count weighting.</p>
-          <p>Demo review needs a substantial concern or multiple concerns. Academic evidence requires at least {targets.minGraded} finalized grades. SETE evidence requires {targets.minResponses} valid responses and {targets.minParticipation}% participation.</p>
-          <p>Sections with adequate evidence for at least one measure count as evaluated. SETE changes match subject, section and professor in both periods. Flags guide academic review and should be interpreted alongside teaching context.</p>
-        </div>
-      </details>
-    </footer>
   </div>;
 }

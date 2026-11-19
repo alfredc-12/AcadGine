@@ -33,7 +33,7 @@ export function TeachingEffectiveness({ rows, assessments, metrics, onOpenDimens
     onOpenDimension(rating.id, rating.name, [...parts, reason].filter(Boolean).join(" "));
   }
 
-  return <section className="dashboard-section section-reveal no-print" aria-labelledby="teaching-title">
+  return <section className="dashboard-section section-reveal no-print" aria-labelledby="teaching-title" data-tour-target="teaching" tabIndex={-1}>
     <header className="section-heading">
       <h2 id="teaching-title">Teaching Effectiveness</h2>
       <details className="context-disclosure">

@@ -1,10 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import { Moon, Sun, UserRound } from "lucide-react";
+import { Compass, Moon, Sun, UserRound } from "lucide-react";
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { courseByCode, periods, programs, type Period, type Section } from "@/data/academic";
 import { defaultScope, scopedRows, sectionKey, sectionTitle, type Scope } from "@/lib/analytics";
+import { DashboardFooter } from "@/components/dashboard-footer";
+import { DashboardTour } from "@/components/dashboard-tour";
+import { WelcomeDialog } from "@/components/welcome-dialog";
+import { Button } from "@/components/ui/primitives";
 import { Sheet } from "@/components/ui/sheet";
 
 type Theme = "light" | "dark";
@@ -30,6 +34,7 @@ type DashboardContext = {
 
 const Dashboard = createContext<DashboardContext | null>(null);
 const defaultFilters: DashboardFilters = { program: defaultScope.program, course: "all", section: "all" };
+const onboardingKey = "acadgine-onboarding";
 
 export function useDashboard() {
   const context = useContext(Dashboard);
@@ -67,12 +72,23 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>("light");
   const [detail, setDetail] = useState<Detail | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [methodologyOpen, setMethodologyOpen] = useState(false);
+  const [onboarding, setOnboarding] = useState<"idle" | "welcome" | "tour">("idle");
+  const [tourStep, setTourStep] = useState(0);
+  const [tourRun, setTourRun] = useState(0);
   const detailTrigger = useRef<HTMLElement | null>(null);
   const main = useRef<HTMLElement>(null);
+  const header = useRef<HTMLElement>(null);
+  const tourButton = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const initial = document.documentElement.dataset.theme;
     setTheme(initial === "dark" ? "dark" : "light");
+    try {
+      const preference = localStorage.getItem(onboardingKey);
+      if (preference === "completed" || preference === "skipped") return;
+    } catch { /* The welcome can still run without persistent storage. */ }
+    setOnboarding("welcome");
   }, []);
 
   function toggleTheme() {
@@ -80,6 +96,31 @@ export function AppShell({ children }: { children: ReactNode }) {
     document.documentElement.dataset.theme = next;
     setTheme(next);
     try { localStorage.setItem("acadgine-theme", next); } catch { /* The in-memory preference still applies. */ }
+  }
+
+  function startTour() {
+    setTourStep(0);
+    setTourRun((run) => run + 1);
+    setOnboarding("tour");
+  }
+
+  function restoreTourFocus() {
+    const trigger = tourButton.current;
+    if (trigger && trigger.getBoundingClientRect().bottom > 0) trigger.focus({ preventScroll: true });
+    else main.current?.focus({ preventScroll: true });
+  }
+
+  function closeOnboarding(outcome: "skipped" | "completed") {
+    setOnboarding("idle");
+    try {
+      if (outcome === "completed" || localStorage.getItem(onboardingKey) !== "completed") {
+        localStorage.setItem(onboardingKey, outcome);
+      }
+    } catch { /* Dismissal still applies to this visit. */ }
+    if (onboarding === "tour") {
+      window.scrollTo({ top: window.scrollY, behavior: "instant" });
+      window.requestAnimationFrame(restoreTourFocus);
+    }
   }
 
   const scope = useMemo<Scope>(() => ({ period: defaultScope.period, program: filters.program }), [filters.program]);
@@ -128,26 +169,34 @@ export function AppShell({ children }: { children: ReactNode }) {
   return <Dashboard.Provider value={{ scope, course, section, availableSections, setProgram, setCourse, setSection, period, previousPeriod, rows, previous,
     filterVersion, resetFilters, openDetail }}>
     <a className="skip-link" href="#main-content">Skip to content</a>
-    <header className="topbar">
+    <header ref={header} className="topbar">
       <div className="topbar-inner">
         <div className="brand">
           <AcadgineMark />
           <span className="brand-copy"><strong>Acadgine</strong><small>Academic Analytics &amp; Intelligent Decision Support</small></span>
         </div>
         <div className="header-actions">
+          <Button ref={tourButton} variant="ghost" size="icon" className="header-tour"
+            aria-label="Start Dashboard Tour" title="Start Dashboard Tour" onClick={startTour}><Compass aria-hidden="true" /></Button>
           <ThemeSwitch theme={theme} onToggle={toggleTheme} />
           <span className="chair-indicator"><UserRound aria-hidden="true" /><span>Program Chair</span></span>
         </div>
       </div>
     </header>
 
-    <main ref={main} className="canvas" id="main-content" tabIndex={-1}>
+    <main ref={main} className="canvas" id="main-content" tabIndex={-1} data-tour-active={onboarding === "tour"}>
       <div className="print-masthead">
         <span className="print-brand"><AcadgineMark /><strong>Acadgine</strong></span>
         <span>{period.label} · {programLabel}{selectionLabel && ` · ${selectionLabel}`} · Illustrative data</span>
       </div>
       {children}
     </main>
+    <DashboardFooter onOpenChange={setMethodologyOpen} />
+    <WelcomeDialog open={onboarding === "welcome"} mark={<AcadgineMark />} onStart={startTour}
+      onSkip={() => closeOnboarding("skipped")} restoreFocus={restoreTourFocus} />
+    {onboarding === "tour" && <DashboardTour key={tourRun} index={tourStep} onStepChange={setTourStep}
+      paused={detailOpen || methodologyOpen} canvasRef={main} headerRef={header}
+      onExit={() => closeOnboarding("skipped")} onFinish={() => closeOnboarding("completed")} />}
 
     <Sheet open={detailOpen} onOpenChange={setDetailOpen} title={detail?.title ?? "Details"}
       description={detail?.description} onRestoreFocus={() => {
