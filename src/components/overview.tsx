@@ -156,7 +156,7 @@ export function Overview() {
 
   return <div className="page-stack overview">
     <div className="page-heading">
-      <div><h1>Program Overview</h1><p className="no-print">{period.label} <span className="context-separator">·</span> Illustrative data</p></div>
+      <h1>Program Overview</h1>
       <div className="heading-action no-print">
         <Button variant="outline" aria-label="Print overview" title="Print overview" onClick={() => window.print()}>
           <Printer data-icon="inline-start" /><span>Print overview</span>

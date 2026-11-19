@@ -1,9 +1,10 @@
 "use client";
 
+import * as Popover from "@radix-ui/react-popover";
 import { BookOpen, CalendarDays, CalendarRange, GraduationCap, Layers3, RotateCcw, X } from "lucide-react";
-import { useLayoutEffect, useState } from "react";
+import { useId, useRef } from "react";
 import { useDashboard } from "@/components/app-shell";
-import { Button } from "@/components/ui/primitives";
+import { Badge, Button } from "@/components/ui/primitives";
 import { DashboardSelect } from "@/components/ui/select";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { courseByCode, programs, type Period, type Semester } from "@/data/academic";
@@ -19,30 +20,44 @@ function academicYearLabel(year: Period["year"]) {
 const academicYears = [...new Set(reportingPeriods.map(({ year }) => year))]
   .map((year) => ({ value: year, label: academicYearLabel(year) }));
 
-function FilterChip({ name, value, onClear }: { name: string; value?: string; onClear: () => void }) {
-  const [displayed, setDisplayed] = useState(value);
+type AppliedFilter = { label: string; value: string; clear: () => void };
 
-  useLayoutEffect(() => {
-    if (value || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setDisplayed(value);
-      return;
-    }
+function ActiveFilters({ filters }: { filters: AppliedFilter[] }) {
+  const titleId = useId();
+  const heading = useRef<HTMLHeadingElement>(null);
+  const count = filters.length;
 
-    const removal = window.setTimeout(() => setDisplayed(undefined), 150);
-    return () => window.clearTimeout(removal);
-  }, [value]);
-
-  const label = value || displayed;
-  if (!label) return null;
-
-  return <Button variant="ghost" size="sm" className="filter-chip" type="button" disabled={!value}
-    data-exiting={!value} aria-hidden={!value} aria-label={`Clear ${name.replace("-", " ")} filter, ${label}`}
-    onClick={() => {
-      onClear();
-      document.getElementById(`${name}-filter`)?.focus({ preventScroll: true });
-    }}>
-    <span>{label}</span><X data-icon="inline-end" aria-hidden="true" />
-  </Button>;
+  return <Popover.Root>
+    <Popover.Trigger asChild>
+      <Button variant="outline" className="filter-active-trigger" data-active={count > 0}
+        aria-label={`Active Filters, ${count} active`}>
+        <span>Active Filters</span><Badge className="filter-active-count" aria-hidden="true">{count}</Badge>
+      </Button>
+    </Popover.Trigger>
+    <Popover.Portal>
+      <Popover.Content className="select-content active-filters-popover" align="end" sideOffset={6} collisionPadding={12}
+        aria-labelledby={titleId} onOpenAutoFocus={(event) => {
+          if (!heading.current) return;
+          event.preventDefault();
+          heading.current.focus({ preventScroll: true });
+        }}>
+        <h2 id={titleId} ref={heading} tabIndex={-1}>Active Filters</h2>
+        {count ? <ul className="active-filter-list">
+          {filters.map(({ label, value, clear }) => <li className="active-filter-row" key={label}>
+            <span className="active-filter-label">{label}</span>
+            <strong>{value}</strong>
+            <Button variant="ghost" size="icon" aria-label={`Clear ${label} filter, ${value}`}
+              onClick={() => {
+                heading.current?.focus({ preventScroll: true });
+                clear();
+              }}>
+              <X aria-hidden="true" />
+            </Button>
+          </li>)}
+        </ul> : <p className="active-filters-empty" role="status">No active filters</p>}
+      </Popover.Content>
+    </Popover.Portal>
+  </Popover.Root>;
 }
 
 export function OverviewFilters() {
@@ -50,8 +65,16 @@ export function OverviewFilters() {
     setPeriod, setProgram, setCourse, setSection, resetFilters } = useDashboard();
   const selectedSubject = courseByCode.get(course);
   const selectedSection = availableSections.find((row) => sectionKey(row) === section);
-  const sectionChip = selectedSection ? (course === "all" ? sectionTitle(selectedSection) : `Section ${selectedSection.section}`) : undefined;
-  const hasFilters = period.id !== defaultPeriod.id || scope.program !== "all" || course !== "all" || section !== "all";
+  const sectionLabel = selectedSection ? (course === "all" ? sectionTitle(selectedSection) : `Section ${selectedSection.section}`) : section;
+  const activeFilters = [
+    { label: "Academic Year", value: period.year !== defaultPeriod.year ? academicYearLabel(period.year) : undefined,
+      clear: () => setPeriod({ year: defaultPeriod.year }) },
+    { label: "Semester", value: period.semester !== defaultPeriod.semester ? semesterLabels[period.semester] : undefined,
+      clear: () => setPeriod({ semester: defaultPeriod.semester }) },
+    { label: "Program", value: scope.program !== "all" ? scope.program : undefined, clear: () => setProgram("all") },
+    { label: "Subject", value: course !== "all" ? selectedSubject?.name ?? course : undefined, clear: () => setCourse("all") },
+    { label: "Section", value: section !== "all" ? sectionLabel : undefined, clear: () => setSection("all") },
+  ].filter((filter): filter is AppliedFilter => filter.value !== undefined);
   const semesters = reportingPeriods.filter(({ year }) => year === period.year)
     .map(({ semester }) => ({ value: `${semester}` as const, label: semesterLabels[semester] }));
 
@@ -93,20 +116,12 @@ export function OverviewFilters() {
         }))]} />
     </div>
     <div className="filter-utilities">
-      <Button className="filter-reset" variant="ghost" onClick={resetFilters} data-active={hasFilters}
+      <ActiveFilters filters={activeFilters} />
+      <Button className="filter-reset" variant="ghost" onClick={resetFilters} data-active={activeFilters.length > 0}
         aria-label="Reset filters" title="Reset filters">
         <RotateCcw data-icon="inline-start" aria-hidden="true" /><span>Reset filters</span>
       </Button>
       <span className="filter-count" role="status">{integer(rows.length)} {rows.length === 1 ? "section" : "sections"}</span>
-    </div>
-    <div className="filter-chips">
-      <FilterChip name="academic-year" value={period.year === defaultPeriod.year ? undefined : academicYearLabel(period.year)}
-        onClear={() => setPeriod({ year: defaultPeriod.year })} />
-      <FilterChip name="semester" value={period.semester === defaultPeriod.semester ? undefined : semesterLabels[period.semester]}
-        onClear={() => setPeriod({ semester: defaultPeriod.semester })} />
-      <FilterChip name="program" value={scope.program === "all" ? undefined : scope.program} onClear={() => setProgram("all")} />
-      <FilterChip name="subject" value={selectedSubject?.name} onClear={() => setCourse("all")} />
-      <FilterChip name="section" value={sectionChip} onClear={() => setSection("all")} />
     </div>
   </div>;
 }
