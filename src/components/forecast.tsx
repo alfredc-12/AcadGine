@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, Minus, Plus } from "lucide-react";
+import { Info, Minus, Plus } from "lucide-react";
 import { useId, useState } from "react";
 import { Button, Card, CardContent, CardHeader, CardTitle } from "@/components/ui/primitives";
 import type { Period } from "@/data/academic";
@@ -20,21 +20,24 @@ export function EnrollmentForecast({ period, enrolled, capacity }: { period: Per
   const [growth, setGrowth] = useState(forecastAssumptions.defaultGrowth);
   const demand = Math.round(enrolled * (1 + growth / 100) ** horizon);
   const gap = capacity - demand;
-  const capacityLabel = capacity <= 0 ? "No approved seat count" : gap < 0 ? `${integer(-gap)} seats over capacity`
-    : gap === 0 ? "At approved capacity" : `${integer(gap)} seats available`;
+  const capacityLabel = capacity <= 0 ? "Capacity unavailable" : gap < 0 ? `${integer(-gap)} seats over capacity`
+    : gap === 0 ? "At capacity" : `${integer(gap)} seats available`;
 
   return <Card className="forecast-card" aria-labelledby={id}>
     <CardHeader>
-      <div><CardTitle as="h3" id={id}>Enrollment Forecast</CardTitle>
-        <p className="forecast-label">Illustrative Forecast — Not Model Generated</p></div>
+      <CardTitle as="h3" id={id}>Enrollment Forecast</CardTitle>
+      <details className="context-disclosure forecast-note">
+        <summary aria-label="Illustrative forecast details"><Info aria-hidden="true" /> Illustrative</summary>
+        <p>This scenario compounds assumed growth from the latest period and holds capacity fixed. It uses no trained model.
+          {capacity > 0 && ` ${integer(capacity)} approved seats · ${formatPercent(percent(demand, capacity))} projected utilization.`}</p>
+      </details>
     </CardHeader>
     <CardContent>
       <div className="forecast-layout">
         <div className="forecast-estimate">
-          <p>Estimated enrollment · {futureLabel(period, horizon)}</p>
+          <p>{futureLabel(period, horizon)}</p>
           <output className="forecast-value" aria-label="Estimated enrollment">{integer(demand)} <small>course seats</small></output>
           <p className="forecast-gap" data-tone={capacity > 0 && gap < 0 ? "warning" : "neutral"}>{capacityLabel}</p>
-          <p className="forecast-capacity">{integer(capacity)} approved · {formatPercent(percent(demand, capacity))} utilization</p>
         </div>
         <div className="forecast-controls">
           <div className="forecast-horizon" role="group" aria-label="Projection horizon">
@@ -56,12 +59,6 @@ export function EnrollmentForecast({ period, enrolled, capacity }: { period: Per
           </label>
         </div>
       </div>
-      <details className="disclosure forecast-method">
-        <summary>Forecast method <ChevronRight aria-hidden="true" /></summary>
-        <div className="disclosure-body">
-          <p>The forecast compounds growth from the latest reporting period and holds approved capacity fixed. A future model could learn from seasonal enrollment and admissions.</p>
-        </div>
-      </details>
     </CardContent>
   </Card>;
 }

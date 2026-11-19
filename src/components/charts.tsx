@@ -8,16 +8,16 @@ import {
 import { useReportingFilter } from "@/components/app-shell";
 import { dimensions, periods, programs, type Dimension, type Period, type Section } from "@/data/academic";
 import { averageSete, formatPercent, formatScore, groupCourses, integer, scopedRows, summarize, targets, type Scope } from "@/lib/analytics";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, Empty } from "@/components/ui/primitives";
+import { Card, CardContent, CardHeader, CardTitle, Empty } from "@/components/ui/primitives";
 import { DashboardSelect } from "@/components/ui/select";
 
-export function ChartPanel({ title, description, controls, children, className }: {
-  title: string; description?: string; controls?: ReactNode; children: ReactNode; className?: string;
+export function ChartPanel({ title, controls, children, className }: {
+  title: string; controls?: ReactNode; children: ReactNode; className?: string;
 }) {
   const id = useId();
   return <Card className={className} aria-labelledby={id}>
     <CardHeader>
-      <div><CardTitle as="h3" id={id}>{title}</CardTitle>{description && <CardDescription>{description}</CardDescription>}</div>
+      <CardTitle as="h3" id={id}>{title}</CardTitle>
       {controls && <div className="chart-controls">{controls}</div>}
     </CardHeader>
     <CardContent>{children}</CardContent>
@@ -135,17 +135,13 @@ export function SeteTrend({ scope, period, course = "all", onOpen }: {
     return { item, rows, label: item.short, current: averageSete(rows, dimension),
       context: `${integer(summary.responses)} valid responses` };
   });
-  const current = observations[period.id];
   const metric = dimension === "all" ? "Average SETE rating" : dimensions.find(({ id }) => id === dimension)?.name ?? "Rating";
-  return <ChartPanel title="SETE performance trend" description="Rating scale 1–5 · Chart range 3–5"
+  return <ChartPanel title="SETE performance trend"
     controls={<DashboardSelect<Dimension | "all"> label="Evaluation dimension" value={dimension}
       onChange={setDimension} active={dimension !== "all"}
       options={[{ value: "all", label: "All dimensions" }, ...dimensions.map(({ id, name }) => ({ value: id, label: name }))]} />}>
-    <div className="chart-keyline">
-      <strong>{formatScore(current.current)} {current.current !== null && <small>/ 5</small>}</strong>
-      <span>{dimension !== "all" && `${metric} · `}{current.context} · {period.short}</span>
-    </div>
-    <TrendPlot label="SETE ratings by semester" points={observations}
+    <span className="chart-unit">Rating / 5</span>
+    <TrendPlot label="SETE ratings out of 5 by semester, with a displayed range of 3 to 5" points={observations}
       series={[{ key: "current", label: metric, color: "var(--chart-accent)" }]}
       ticks={[3, 3.5, 4, 4.5, 5]} format={formatScore} tickFormat={(value) => String(value)}
       selected={period.short} onSelect={(index) => {
@@ -173,7 +169,6 @@ export function CoursePassingChart({ courses, onOpen }: {
   const nextPage = currentPage < lastPage ? currentPage + 1 : 0;
 
   return <ChartPanel title="Course passing rates"
-    description={`${visible.length ? `${offset + 1}–${offset + visible.length} of ${graded.length}` : 0} graded courses · ${targets.passing}% demo target`}
     controls={<DashboardSelect label="Sort course passing rates" value={sort} active={sort !== "low"}
       onChange={(value) => { setSort(value); setPage(0); }}
       options={[{ value: "low", label: "Lowest first" }, { value: "high", label: "Highest first" },
@@ -192,14 +187,14 @@ export function CoursePassingChart({ courses, onOpen }: {
             <span className="passing-target" style={{ left: `${targets.passing}%` }} />
           </span>
           <strong>{formatPercent(value)}</strong>
-          <span className="bar-tooltip chart-tooltip" aria-hidden="true">{item.code} · {detail}{below && " · Below demo target"}</span>
+          <span className="bar-tooltip chart-tooltip" aria-hidden="true">{item.code} · {detail} · {targets.passing}% demo target</span>
         </button>;
       })}
       <div className="passing-axis" aria-hidden="true"><span /><div><span>0%</span><span>50%</span><span>100%</span></div><span /></div>
       {lastPage > 0 && <div className="passing-pagination no-print">
-        <span aria-live="polite">{offset + 1}–{offset + visible.length} of {graded.length} courses</span>
+        <span aria-live="polite">{offset + 1}–{offset + visible.length} of {graded.length}</span>
         <button type="button" className="text-control" onClick={() => setPage(nextPage)}>
-          {nextPage === 0 ? "First courses" : "Next courses"} <ChevronRight aria-hidden="true" />
+          {nextPage === 0 ? "First" : "Next"} <ChevronRight aria-hidden="true" />
         </button>
       </div>}
     </div> : <Empty>No graded enrollments for this reporting scope.</Empty>}
@@ -215,28 +210,28 @@ export function CapacityChart({ rows, period, onOpen }: {
   });
   const maximum = Math.max(4, Math.ceil(Math.max(0, ...groups.flatMap(({ metrics }) => [metrics.enrolled, metrics.seats])) / 40)) * 40;
 
-  return <ChartPanel title="Enrollment & capacity" description="Approved course seats by program"
+  return <ChartPanel title="Enrollment & capacity"
     controls={<div className="chart-legend capacity-legend"><span><i className="legend-enrolled" />Enrolled</span>
-      <span><i className="legend-capacity" />Approved capacity</span></div>}>
+      <span><i className="legend-capacity" />Approved seats</span></div>}>
     {groups.length ? <div className="capacity-chart">
       {groups.map((group) => {
         const { metrics } = group;
         const high = metrics.capacity !== null && metrics.capacity >= targets.capacityWarning;
         const over = metrics.enrolled > metrics.seats;
         const above = group.rows.filter((row) => row.enrolled > row.seats).length;
-        const note = over ? "Over capacity" : above ? `${above} ${above === 1 ? "section over" : "sections over"}` : high ? "Near capacity" : "Seats available";
+        const note = over ? "Over capacity" : above ? `${above} ${above === 1 ? "section over" : "sections over"}` : high ? "Near capacity" : null;
         return <button type="button" className="capacity-row" key={group.id} onClick={() => onOpen(group.name, group.rows)}
-          aria-label={`${group.name}, ${metrics.enrolled} enrolled of ${metrics.seats} seats, ${formatPercent(metrics.capacity)}, ${note}. View details`}>
-          <span className="capacity-identity"><strong>{group.id}</strong><small>{group.name.replace("BS ", "")}</small></span>
+          aria-label={`${group.name}, ${metrics.enrolled} enrolled of ${metrics.seats} seats, ${formatPercent(metrics.capacity)}${note ? `, ${note}` : ""}. View details`}>
+          <span className="capacity-identity"><strong>{group.id}</strong></span>
           <span className="capacity-scale" aria-hidden="true">
             <span className="capacity-approved" style={{ width: `${metrics.seats / maximum * 100}%` }} />
             <span className="capacity-enrolled" data-over={over} style={{ width: `${metrics.enrolled / maximum * 100}%` }} />
             <span className="capacity-marker" style={{ left: `${metrics.seats / maximum * 100}%` }} />
           </span>
           <span className="capacity-value"><strong>{integer(metrics.enrolled)} <small>/ {integer(metrics.seats)} seats</small></strong>
-            <small data-tone={over || above ? "critical" : high ? "warning" : "neutral"}>{formatPercent(metrics.capacity)} · {note}</small>
+            <small data-tone={over || above ? "critical" : high ? "warning" : "neutral"}>{formatPercent(metrics.capacity)}{note && ` · ${note}`}</small>
           </span>
-          <span className="bar-tooltip chart-tooltip" aria-hidden="true">{group.name} · {metrics.enrolled} of {metrics.seats} approved seats</span>
+          <span className="bar-tooltip chart-tooltip" aria-hidden="true">{group.name}</span>
         </button>;
       })}
       <div className="capacity-axis" aria-hidden="true"><span /><div>{[0, 1, 2, 3, 4].map((step) =>

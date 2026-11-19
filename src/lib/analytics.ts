@@ -97,27 +97,27 @@ export function getNotices(rows: Section[], period: Period, previous: Section[])
   if (overloaded.length) {
     const excess = overloaded.reduce((total, row) => total + row.enrolled - row.seats, 0);
     notices.push({
-      id: "capacity", tone: "critical", title: "Sections over capacity",
-      message: `${overloaded.length} ${overloaded.length === 1 ? "section exceeds" : "sections exceed"} approved capacity by ${excess} ${excess === 1 ? "seat" : "seats"} in total.`,
+      id: "capacity", tone: "critical", title: `${overloaded.length} ${overloaded.length === 1 ? "section" : "sections"} over capacity`,
+      message: `${excess} excess ${excess === 1 ? "seat" : "seats"} across affected sections.`,
       action: "Review section capacity", rows: overloaded,
     });
   }
   const overdue = rows.filter((row) => gradeStatus(row, period) === "Overdue");
   if (overdue.length) notices.push({
-    id: "grades", tone: "warning", title: "Grades past deadline",
-    message: `${overdue.length} ${overdue.length === 1 ? "section is" : "sections are"} awaiting final grades.`,
+    id: "grades", tone: "warning", title: "Grades overdue",
+    message: `${overdue.length} ${overdue.length === 1 ? "section needs" : "sections need"} final grades.`,
     action: "Review pending grades", rows: overdue,
   });
   const below = groupCourses(rows, period).filter(({ metrics }) => metrics.passing !== null && metrics.passing < targets.passing);
   if (below.length) notices.push({
-    id: "passing", tone: "warning", title: "Courses below passing target",
+    id: "passing", tone: "warning", title: "Low passing rates",
     message: `${below.length} ${below.length === 1 ? "course is" : "courses are"} below the ${targets.passing}% demo target.`,
     action: "Review graded enrollments", rows: below.flatMap((course) => course.rows),
   });
   const metrics = summarize(rows, period);
   if (metrics.participation !== null && metrics.participation < targets.participation) notices.push({
     id: "participation", tone: "warning", title: "Low SETE participation",
-    message: `${formatPercent(metrics.participation)} participation against a ${targets.participation}% demo target.`,
+    message: `${formatPercent(metrics.participation)} vs ${targets.participation}% demo target.`,
     action: "Review evaluation coverage", rows: rows.filter((row) => row.invitations > 0),
   });
   for (const dimension of dimensions) {
@@ -125,7 +125,7 @@ export function getNotices(rows: Section[], period: Period, previous: Section[])
     if (drop === null || drop > -targets.dimensionDrop) continue;
     notices.push({
       id: dimension.id, tone: "info", title: `${dimension.name} declined`,
-      message: `${signed(drop, 2)} points from the previous semester. Review alongside participation.`,
+      message: `${signed(drop, 2)} points vs previous period.`,
       action: "Explore teaching context", rows: rows.filter((row) => row.scores),
     });
   }

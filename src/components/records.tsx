@@ -131,15 +131,15 @@ export function RecordsTable<Row>({ label, rows, columns, keyOf, onOpen, exportN
 
 export function sectionColumns(period: Period): Column<Section>[] {
   return [
-    { id: "section", title: "Course / section", value: (row) => `${row.course} · ${row.section} ${courseByCode.get(row.course)?.name ?? ""}`,
-      display: (row) => <><span className="cell-title">{courseByCode.get(row.course)?.name}</span><small>{row.course} · Section {row.section}</small></> },
+    { id: "section", title: "Course", value: (row) => `${row.course} · ${row.section} ${courseByCode.get(row.course)?.name ?? ""}`,
+      display: (row) => <><span className="cell-title" title={row.course}>{courseByCode.get(row.course)?.name ?? row.course}</span><small>Section {row.section}</small></> },
     { id: "faculty", title: "Faculty", value: (row) => facultyById.get(row.faculty)?.name ?? row.faculty },
     { id: "enrolled", title: "Enrolled", value: (row) => row.enrolled, numeric: true },
-    { id: "seats", title: "Approved seats", value: (row) => row.seats, numeric: true },
-    { id: "passing", title: "Passing rate (%)", value: (row) => percent(row.passed, row.graded), numeric: true,
+    { id: "seats", title: "Capacity", value: (row) => row.seats, numeric: true },
+    { id: "passing", title: "Passing (%)", value: (row) => percent(row.passed, row.graded), numeric: true,
       display: (row) => formatPercent(percent(row.passed, row.graded)) },
     { id: "sete", title: "SETE (/5)", value: (row) => averageSete([row]), numeric: true, display: (row) => formatScore(averageSete([row])) },
-    { id: "grade", title: "Grade submission", value: (row) => gradeStatus(row, period),
+    { id: "grade", title: "Grades", value: (row) => gradeStatus(row, period),
       display: (row) => <Status tone={gradeTone[gradeStatus(row, period)]}>{gradeStatus(row, period)}</Status> },
   ];
 }
