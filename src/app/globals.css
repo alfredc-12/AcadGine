@@ -615,7 +615,10 @@ td small { display: block; color: var(--muted); font-size: 11px; }
 }
 .tour-panel-header p { color: var(--accent); font-size: 11px; font-weight: 680; }
 .tour-panel-header span { color: var(--muted); font-size: 12px; }
-.tour-panel-body { position: relative; flex: 1 1 auto; overflow: auto; min-height: 0; padding: 9px 13px; }
+.tour-panel-body {
+  position: relative; flex: 1 1 auto; min-height: 0; padding: 9px 13px;
+  overflow-x: hidden; overflow-y: auto; scrollbar-gutter: stable;
+}
 .tour-panel-content { display: flow-root; }
 .tour-step-caption { animation: tour-copy-entrance 185ms var(--ease) 45ms both; }
 .tour-step-copy { animation: tour-copy-entrance 215ms var(--ease) 70ms both; }
@@ -644,7 +647,8 @@ td small { display: block; color: var(--muted); font-size: 11px; }
 .tour-actions .button-primary:not([aria-disabled="true"]):hover > svg,
 .welcome-modal .button-primary:not(:disabled):hover > svg { transform: translateX(2px); }
 @media screen {
-  .canvas[data-tour-active="true"] { padding-block-end: calc(28px + var(--tour-panel-space, 280px)); }
+  :root:has(.canvas[data-tour-active="true"]) { scrollbar-gutter: stable; }
+  .canvas[data-tour-active="true"] { padding-block-end: calc(54px + 50lvh); }
 }
 @media screen and (max-width: 640px) {
   .dashboard-footer { grid-template-columns: minmax(0, 1fr) auto; gap: 4px 8px; }

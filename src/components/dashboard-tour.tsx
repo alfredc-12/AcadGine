@@ -109,6 +109,16 @@ function tween(from: Placement, to: Placement, progress: number): Placement {
   };
 }
 
+function samePlacement(previous: Placement | null, next: Placement) {
+  if (!previous || previous.left !== next.left || previous.top !== next.top || previous.height !== next.height
+    || previous.partial !== next.partial || previous.moving !== next.moving) return false;
+
+  const a = previous.spot;
+  const b = next.spot;
+  return a === b || (a !== null && b !== null && a.left === b.left && a.top === b.top
+    && a.width === b.width && a.height === b.height && a.radius === b.radius);
+}
+
 function useSpotlight(canvasRef: RefObject<HTMLElement | null>, headerRef: RefObject<HTMLElement | null>,
   panel: HTMLDivElement | null, id: string, run: number, open: boolean, onSettled: (target: string) => void) {
   const [placement, setPlacement] = useState<Placement | null>(null);
@@ -137,33 +147,25 @@ function useSpotlight(canvasRef: RefObject<HTMLElement | null>, headerRef: RefOb
       const height = visualViewport?.height ?? window.innerHeight;
       const bodyStyle = getComputedStyle(body!);
       const padding = Number.parseFloat(bodyStyle.paddingTop) + Number.parseFloat(bodyStyle.paddingBottom);
-      const chrome = header!.offsetHeight + footer!.offsetHeight;
-      const naturalHeight = chrome + content!.offsetHeight + padding;
+      const chrome = header!.getBoundingClientRect().height + footer!.getBoundingClientRect().height;
+      const naturalHeight = Math.ceil(chrome + content!.getBoundingClientRect().height + padding);
       return {
         width: document.documentElement.clientWidth,
         top: Math.max(gutter, (headerRef.current?.getBoundingClientRect().bottom ?? 0) + 8),
         bottom: height - gutter,
-        panelWidth: panel!.offsetWidth,
+        panelWidth: panel!.getBoundingClientRect().width,
         panelHeight: Math.max(chrome, Math.min(naturalHeight, height / 2)),
       };
     }
 
     function show(next: Placement) {
+      if (samePlacement(painted.current, next)) return;
       painted.current = next;
       setPlacement(next);
     }
 
     function follow() {
-      const current = viewport();
-      reservePanelSpace(current.panelHeight);
-      show(locate(target!.getBoundingClientRect(), current));
-    }
-
-    function reservePanelSpace(height: number) {
-      const padding = `${height + gap + gutter}px`;
-      if (canvas!.style.getPropertyValue("--tour-panel-space") !== padding) {
-        canvas!.style.setProperty("--tour-panel-space", padding);
-      }
+      show(locate(target!.getBoundingClientRect(), viewport()));
     }
 
     function schedule() {
@@ -181,7 +183,6 @@ function useSpotlight(canvasRef: RefObject<HTMLElement | null>, headerRef: RefOb
 
     function align(animate: boolean) {
       const current = viewport();
-      reservePanelSpace(current.panelHeight);
       const rect = target!.getBoundingClientRect();
       const existing = locate(rect, current);
       const startY = window.scrollY;
@@ -259,11 +260,6 @@ function useSpotlight(canvasRef: RefObject<HTMLElement | null>, headerRef: RefOb
       if (frame) window.cancelAnimationFrame(frame);
     };
   }, [canvasRef, headerRef, id, run, open, onSettled, panel]);
-
-  useLayoutEffect(() => {
-    const canvas = canvasRef.current;
-    return () => canvas?.style.removeProperty("--tour-panel-space");
-  }, [canvasRef]);
 
   return placement;
 }
