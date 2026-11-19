@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { useDashboard, useReportingFilter } from "@/components/app-shell";
 import { SectionSeteChart, SetePassingScatter, SeteTrend } from "@/components/charts";
-import { EnrollmentForecast } from "@/components/forecast";
+import { SeteDistribution } from "@/components/sete-distribution";
 import { SectionDetails, SectionPerformanceTable } from "@/components/section-performance";
 import { TeachingEffectiveness } from "@/components/teaching-effectiveness";
 import { Status } from "@/components/records";
@@ -235,11 +235,11 @@ export function Overview() {
     <TeachingEffectiveness rows={rows} assessments={assessments} metrics={metrics} onOpenDimension={(dimension, name, summary) =>
       showRecords(name, assessments.filter(({ row }) => row.scores && row.responses > 0), summary, { dimension })} />
 
-    <section className="dashboard-section section-reveal no-print" aria-labelledby="planning-title">
-      <header className="section-heading"><h2 id="planning-title">Insights &amp; Predictive Planning</h2></header>
+    <section className="dashboard-section section-reveal no-print" aria-labelledby="sete-insights-title">
+      <header className="section-heading"><h2 id="sete-insights-title">SETE Insights &amp; Actions</h2></header>
       <div className="decision-grid">
         <Insights findings={insights} onOpen={showFinding} />
-        <EnrollmentForecast period={period} enrolled={metrics.enrolled} capacity={metrics.seats} />
+        <SeteDistribution assessments={assessments} onOpen={showRecords} />
       </div>
     </section>
 

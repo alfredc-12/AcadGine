@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowDownRight, ArrowUpRight, Info, Minus } from "lucide-react";
+import { Status } from "@/components/records";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/primitives";
 import { dimensions, type Dimension, type Section } from "@/data/academic";
 import { averageSete, compare, formatPercent, formatScore, integer, signed, targets, type SectionAssessment, type summarize } from "@/lib/analytics";
@@ -22,7 +23,9 @@ export function TeachingEffectiveness({ rows, assessments, metrics, onOpenDimens
     .sort((a, b) => (a.change ?? 0) - (b.change ?? 0));
   const lowest = [...ratings].sort((a, b) => (a.value ?? Infinity) - (b.value ?? Infinity))[0];
   const focus = declines.length ? declines.slice(0, 2) : lowest?.value != null ? [lowest] : [];
-  const participationTone = metrics.participation !== null && metrics.participation < targets.participation ? "warning" : "neutral";
+  const participation = metrics.participation;
+  const belowTarget = participation !== null && participation < targets.participation;
+  const participationTone = participation === null ? "neutral" : belowTarget ? "warning" : "positive";
 
   function openRating(rating: (typeof ratings)[number], reason?: string) {
     const parts = [rating.value === null ? "No ratings." : `Weighted rating: ${formatScore(rating.value)} / 5.`,
@@ -66,23 +69,31 @@ export function TeachingEffectiveness({ rows, assessments, metrics, onOpenDimens
         </CardContent>
       </Card>
       <Card className="teaching-summary" aria-labelledby="participation-title">
-        <CardHeader><CardTitle as="h3" id="participation-title">Participation</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle as="h3" id="participation-title">Participation</CardTitle>
+          <Status tone={participationTone}>{participation === null ? "No invitations" : belowTarget ? "Below target" : "Meets target"}</Status>
+        </CardHeader>
         <CardContent>
           <div className="participation-summary">
-            <strong data-tone={participationTone}>{formatPercent(metrics.participation)}</strong>
+            <strong>{formatPercent(participation)}</strong>
             <p title={`${metrics.coverage} of ${rows.length} sections evaluated`}>{integer(metrics.responses)} / {integer(metrics.invitations)} responses
               <small className="sr-only">{metrics.coverage} of {rows.length} sections evaluated.</small></p>
           </div>
-          <div className="teaching-focus">
-            <h3>Review focus</h3>
-            {focus.length ? focus.map((rating) => (
+          {participation !== null && <div className="participation-meter" data-tone={participationTone}
+            role="meter" aria-label="SETE participation" aria-valuenow={Number(participation.toFixed(1))}
+            aria-valuemin={0} aria-valuemax={100} aria-valuetext={formatPercent(participation)}>
+            <span aria-hidden="true" style={{ width: `${participation}%` }} />
+          </div>}
+          {focus.length > 0 && <div className="teaching-focus">
+            <h4>Review focus</h4>
+            <div>{focus.map((rating) => (
               <button type="button" className="focus-row" key={rating.id}
                 onClick={() => openRating(rating, declines.length ? "This decline meets the demo review threshold." : "This dimension has the lowest rating in the current selection.")}>
                 <span>{rating.name}</span>
                 <ArrowUpRight aria-hidden="true" />
               </button>
-            )) : <p className="muted">No responses.</p>}
-          </div>
+            ))}</div>
+          </div>}
         </CardContent>
       </Card>
     </div>
