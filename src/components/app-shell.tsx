@@ -150,13 +150,22 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   function setCourse(course: string) {
     setFilters((prior) => {
+      if (course !== "all") {
+        const subject = courseByCode.get(course);
+        if (!subject || (prior.program !== "all" && subject.program !== prior.program)) return prior;
+      }
       const section = scopedRows({ ...defaultScope, program: prior.program }, course, prior.section).length ? prior.section : "all";
       return { ...prior, course, section };
     });
   }
 
   function setSection(section: string) {
-    setFilters((prior) => ({ ...prior, section }));
+    setFilters((prior) => {
+      if (section === "all") return { ...prior, section };
+
+      const [match] = scopedRows({ ...defaultScope, program: prior.program }, prior.course, section);
+      return match ? { program: match.program, course: match.course, section } : prior;
+    });
   }
 
   function resetFilters() {

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import {
   Activity, AlertTriangle, ArrowDownRight, ArrowRight, ArrowUpRight, ChevronRight, ClipboardCheck,
-  GraduationCap, Info, Minus, Printer, RotateCcw, TrendingUp, Vote,
+  GraduationCap, Info, ListFilter, Minus, Printer, TrendingUp, Vote,
 } from "lucide-react";
 import { useDashboard, useReportingFilter } from "@/components/app-shell";
 import { SectionSeteChart, SetePassingScatter, SeteTrend } from "@/components/charts";
@@ -13,43 +13,14 @@ import { TeachingEffectiveness } from "@/components/teaching-effectiveness";
 import { Status } from "@/components/records";
 import { Alert, Button, Card, CardContent, CardHeader, CardTitle } from "@/components/ui/primitives";
 import { DashboardSelect } from "@/components/ui/select";
-import { courses, programs, type Dimension, type Period, type Section } from "@/data/academic";
+import { OverviewFilters } from "@/components/overview-filters";
+import { type Dimension, type Period, type Section } from "@/data/academic";
 import {
   assessSections, averageSete, compare, formatPercent, formatScore, integer, percent, reviewTones, scopedRows,
-  sectionFindings, sectionKey, sectionTitle, signed, summarize, targets,
-  type Scope, type SectionAssessment, type SectionFinding, type ReviewStatus, type Tone,
+  sectionFindings, sectionTitle, signed, summarize, targets,
+  type SectionAssessment, type SectionFinding, type ReviewStatus, type Tone,
 } from "@/lib/analytics";
 
-function OverviewFilters() {
-  const { scope, course, section, availableSections, setProgram, setCourse, setSection, resetFilters } = useDashboard();
-  const subjects = courses.filter(({ program }) => scope.program === "all" || program === scope.program);
-
-  return <div className="overview-filters no-print" role="group" aria-label="Dashboard filters" data-tour-target="filters" tabIndex={-1}>
-    <div className="filter-field">
-      <label htmlFor="program-filter">Program</label>
-      <DashboardSelect<Scope["program"]> id="program-filter" label="Program" value={scope.program} onChange={setProgram}
-        active={scope.program !== "all"}
-        options={[{ value: "all", label: "All programs" }, ...programs.map(({ id, name }) => ({ value: id, label: name }))]} />
-    </div>
-    <div className="filter-field">
-      <label htmlFor="subject-filter">Subject</label>
-      <DashboardSelect id="subject-filter" label="Subject" value={course} onChange={setCourse}
-        active={course !== "all"} disabled={!subjects.length}
-        options={[{ value: "all", label: "All subjects" }, ...subjects.map(({ code, name }) => ({ value: code, label: name }))]} />
-    </div>
-    <div className="filter-field">
-      <label htmlFor="section-filter">Section</label>
-      <DashboardSelect id="section-filter" label="Section" value={section} onChange={setSection}
-        active={section !== "all"} disabled={!availableSections.length}
-        options={[{ value: "all", label: "All sections" }, ...availableSections.map((row) => ({
-          value: sectionKey(row), label: course === "all" ? sectionTitle(row) : `Section ${row.section}`,
-        }))]} />
-    </div>
-    <Button className="filter-reset" variant="ghost" onClick={resetFilters}>
-      <RotateCcw data-icon="inline-start" /> Reset filters
-    </Button>
-  </div>;
-}
 
 function PriorityAlert({ notice, more, onOpen, onMore }: {
   notice: SectionFinding; more: number; onOpen: () => void; onMore: () => void;
@@ -226,7 +197,7 @@ export function Overview() {
       <Card className="section-records"><CardContent>
         <SectionPerformanceTable key={filterVersion} assessments={records} onOpen={showSection}
           exportName={`acadgine-sections-${period.year.replace("–", "-")}-s${period.semester}-${scope.program.toLowerCase()}`}
-          statusFilter={<DashboardSelect<ReviewStatus | "all"> label="Review status" value={status} onChange={setStatus} active={status !== "all"}
+          statusFilter={<DashboardSelect<ReviewStatus | "all"> label="Review status" icon={ListFilter} value={status} onChange={setStatus} active={status !== "all"}
             options={[{ value: "all", label: "All statuses" },
               ...(Object.keys(reviewTones) as ReviewStatus[]).map((value) => ({ value, label: value }))]} />} />
       </CardContent></Card>

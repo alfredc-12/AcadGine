@@ -1,10 +1,10 @@
 "use client";
 
 import * as Select from "@radix-ui/react-select";
-import { Check, ChevronDown, ChevronUp } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export function DashboardSelect<T extends string>({ id, label, value, options, onChange, active, disabled, className }: {
+export function DashboardSelect<T extends string>({ id, label, value, options, onChange, active, disabled, className, icon: Icon }: {
   id?: string;
   label: string;
   value: T;
@@ -13,11 +13,13 @@ export function DashboardSelect<T extends string>({ id, label, value, options, o
   active?: boolean;
   disabled?: boolean;
   className?: string;
+  icon?: LucideIcon;
 }) {
   return (
     <Select.Root value={value} onValueChange={(choice) => onChange(choice as T)} disabled={disabled}>
       <Select.Trigger id={id} aria-label={label} data-slot="select-trigger" data-selected={active}
         className={cn("ui-select", className)}>
+        {Icon && <span className="select-field-icon"><Icon aria-hidden="true" /></span>}
         <span className="select-value"><Select.Value /></span>
         <Select.Icon asChild><ChevronDown aria-hidden="true" /></Select.Icon>
       </Select.Trigger>
