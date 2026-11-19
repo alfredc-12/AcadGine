@@ -20,6 +20,7 @@ export function EnrollmentForecast({ period, enrolled, capacity }: { period: Per
   const [growth, setGrowth] = useState(forecastAssumptions.defaultGrowth);
   const demand = Math.round(enrolled * (1 + growth / 100) ** horizon);
   const gap = capacity - demand;
+  const currentSpare = capacity - enrolled;
   const capacityLabel = capacity <= 0 ? "Capacity unavailable" : gap < 0 ? `${integer(-gap)} seats over capacity`
     : gap === 0 ? "At capacity" : `${integer(gap)} seats available`;
 
@@ -27,7 +28,7 @@ export function EnrollmentForecast({ period, enrolled, capacity }: { period: Per
     <CardHeader>
       <CardTitle as="h3" id={id}>Enrollment Forecast</CardTitle>
       <details className="context-disclosure forecast-note">
-        <summary aria-label="Illustrative forecast details"><Info aria-hidden="true" /> Illustrative</summary>
+        <summary aria-label="Illustrative forecast details"><Info aria-hidden="true" /> Illustrative Forecast</summary>
         <p>This scenario compounds assumed growth from the latest period and holds capacity fixed. It uses no trained model.
           {capacity > 0 && ` ${integer(capacity)} approved seats · ${formatPercent(percent(demand, capacity))} projected utilization.`}</p>
       </details>
@@ -38,6 +39,7 @@ export function EnrollmentForecast({ period, enrolled, capacity }: { period: Per
           <p>{futureLabel(period, horizon)}</p>
           <output className="forecast-value" aria-label="Estimated enrollment">{integer(demand)} <small>course seats</small></output>
           <p className="forecast-gap" data-tone={capacity > 0 && gap < 0 ? "warning" : "neutral"}>{capacityLabel}</p>
+          {capacity > 0 && <p className="forecast-current">Current capacity · {integer(Math.abs(currentSpare))} seats {currentSpare < 0 ? "over" : "open"}</p>}
         </div>
         <div className="forecast-controls">
           <div className="forecast-horizon" role="group" aria-label="Projection horizon">

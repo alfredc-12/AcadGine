@@ -1,13 +1,15 @@
 "use client";
 
-import { ArrowUpRight, ChevronRight } from "lucide-react";
+import { ArrowUpRight, ChevronRight, Info } from "lucide-react";
 import { type ReactNode, useEffect, useId, useState } from "react";
 import {
-  CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis,
+  CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Scatter, ScatterChart,
+  Tooltip, XAxis, YAxis, type ScatterShapeProps,
 } from "recharts";
 import { useReportingFilter } from "@/components/app-shell";
-import { dimensions, periods, programs, type Dimension, type Period, type Section } from "@/data/academic";
-import { averageSete, formatPercent, formatScore, groupCourses, integer, scopedRows, summarize, targets, type Scope } from "@/lib/analytics";
+import { courseByCode, dimensions, facultyById, periods, type Dimension, type Period, type Section } from "@/data/academic";
+import { averageSete, compare, formatPercent, formatScore, integer, scopedRows, sectionTitle, signed, summarize,
+  reviewTones, type Scope, type SectionAssessment } from "@/lib/analytics";
 import { Card, CardContent, CardHeader, CardTitle, Empty } from "@/components/ui/primitives";
 import { DashboardSelect } from "@/components/ui/select";
 
@@ -24,20 +26,8 @@ export function ChartPanel({ title, controls, children, className }: {
   </Card>;
 }
 
-export type PlotPoint = {
-  label: string;
-  current: number | null;
-  comparison?: number | null;
-  context?: string;
-};
-type Series = {
-  key: "current" | "comparison";
-  label: string;
-  color: string;
-  dashed?: boolean;
-};
-
-const wholeNumber = (value: number) => integer(value);
+const ratingTicks = [1, 2, 3, 4, 5];
+const axis = { fill: "var(--muted)", fontSize: 11, fontFamily: "inherit" };
 
 function useChartMotion() {
   const [animate, setAnimate] = useState(false);
@@ -51,191 +41,190 @@ function useChartMotion() {
   return animate;
 }
 
-export function TrendPlot({ points, series, ticks, format = wholeNumber, tickFormat = format, selected, transition, onSelect, label }: {
-  points: PlotPoint[];
-  series: Series[];
-  ticks: number[];
-  format?: (value: number) => string;
-  tickFormat?: (value: number) => string;
-  selected?: string;
-  transition?: string;
-  onSelect?: (index: number) => void;
-  label: string;
-}) {
-  const animate = useChartMotion();
-  const [reading, setReading] = useState(false);
-  const hasData = points.some((point) => point.current !== null || point.comparison != null);
-  const axis = { fill: "var(--muted)", fontSize: 11, fontFamily: "inherit" };
-
-  return <div className="trend-figure">
-    {series.length > 1 && <div className="chart-legend">
-      {series.map((item) => <span key={item.key}><i style={{ borderColor: item.color, borderTopStyle: item.dashed ? "dashed" : "solid" }} />{item.label}</span>)}
-    </div>}
-    {hasData ? <div className="trend-plot" aria-label={label}>
-      <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 480, height: 168 }}>
-        <LineChart data={points} margin={{ top: 12, right: 17, left: 0, bottom: 5 }} accessibilityLayer>
-          <CartesianGrid vertical={false} stroke="var(--chart-grid)" />
-          <YAxis ticks={ticks} domain={[ticks[0], ticks[ticks.length - 1]]} tick={axis} tickLine={false} axisLine={false}
-            width={37} tickFormatter={tickFormat} allowDataOverflow />
-          <XAxis dataKey="label" tick={axis} tickLine={false} axisLine={false} minTickGap={12} tickMargin={9} />
-          {selected && <ReferenceLine x={selected} stroke="var(--accent-line)" strokeDasharray="3 4" />}
-          {transition && <ReferenceLine x={transition} stroke="var(--muted)" strokeDasharray="4 4" />}
-          <Tooltip
-            cursor={{ stroke: "var(--chart-grid)" }}
-            content={({ active, payload }) => {
-              const point = payload?.[0]?.payload as PlotPoint | undefined;
-              if (!active || !point) return null;
-              return <div className="chart-tooltip">
-                <strong>{point.label}</strong>
-                {series.map(({ key, label: name }) => point[key] == null ? null : <div key={key}>
-                  <span>{name}</span><b>{format(point[key])}</b>
-                </div>)}
-                {point.context && <small>{point.context}</small>}
-              </div>;
-            }}
-          />
-          {series.map((item) => <Line key={item.key} type="linear" dataKey={item.key} name={item.label}
-            stroke={item.color} strokeWidth={2.4} strokeDasharray={item.dashed ? "6 5" : undefined}
-            dot={({ cx, cy, index }) => cx == null || cy == null ? null : <g key={index}>
-              {onSelect && <circle cx={cx} cy={cy} r={10} fill="transparent" className="trend-dot-hit" onClick={() => onSelect(index)} />}
-              <circle cx={cx} cy={cy} r={onSelect ? 3 : 2} fill="var(--surface)" stroke={item.color} strokeWidth={1.5} pointerEvents="none" />
-            </g>}
-            activeDot={({ cx, cy, index }) => onSelect
-              ? <g><circle cx={cx} cy={cy} r={12} fill="transparent" className="trend-dot-hit" onClick={() => onSelect(index)} />
-                <circle cx={cx} cy={cy} r={5} fill={item.color} stroke="var(--surface)" strokeWidth={2} pointerEvents="none" /></g>
-              : <circle cx={cx} cy={cy} r={4} fill={item.color} stroke="var(--surface)" strokeWidth={2} />}
-            isAnimationActive={animate} animationDuration={400} connectNulls={false} />)}
-        </LineChart>
-      </ResponsiveContainer>
-    </div> : <Empty>No observations for this reporting scope.</Empty>}
-    <div className="chart-readout no-print">
-      <button type="button" className="text-control" aria-expanded={reading} onClick={() => setReading((value) => !value)}>
-        {reading ? "Hide chart data" : "View chart data"} <ChevronRight aria-hidden="true" />
-      </button>
-      {reading && <div className="point-list">
-        {points.map((point, index) => {
-          const values = series.map(({ key, label: name }) => `${name}: ${point[key] == null ? "N/A" : format(point[key])}`).join(" · ");
-          return onSelect && point.current !== null ? <button type="button" key={point.label}
-            className="point-row" onClick={() => onSelect(index)}>
-            <span>{point.label}</span><span>{values}</span>{point.context && <small>{point.context}</small>}<ArrowUpRight aria-hidden="true" />
-          </button> : <div key={point.label} className="point-row"><span>{point.label}</span><span>{values}</span>{point.context && <small>{point.context}</small>}</div>;
-        })}
-      </div>}
-    </div>
+function ChartReadout({ children }: { children: ReactNode }) {
+  const [expanded, setExpanded] = useState(false);
+  return <div className="chart-readout no-print">
+    <button type="button" className="text-control" aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}>
+      {expanded ? "Hide data" : "View data"} <ChevronRight aria-hidden="true" />
+    </button>
+    {expanded && <div className="point-list">{children}</div>}
   </div>;
 }
 
-export function SeteTrend({ scope, period, course = "all", onOpen }: {
-  scope: Scope; period: Period; course?: string; onOpen: (period: Period, rows: Section[], dimension: Dimension | "all") => void;
+type TrendPoint = { label: string; period: Period; rows: Section[]; value: number | null; responses: number; passing: number | null; change: number | null };
+
+export function SeteTrend({ scope, period, course, section, onOpen }: {
+  scope: Scope; period: Period; course: string; section: string;
+  onOpen: (period: Period, rows: Section[], dimension: Dimension | "all") => void;
 }) {
   const [dimension, setDimension] = useReportingFilter<Dimension | "all">("all");
+  const animate = useChartMotion();
   const observations = periods.map((item) => {
-    const rows = scopedRows({ ...scope, period: item.id }, course);
-    const summary = summarize(rows, item);
-    return { item, rows, label: item.short, current: averageSete(rows, dimension),
-      context: `${integer(summary.responses)} valid responses` };
+    const rows = scopedRows({ ...scope, period: item.id }, course, section);
+    const { responses, passing } = summarize(rows);
+    return { period: item, rows, label: item.short, value: averageSete(rows, dimension), responses, passing };
   });
-  const metric = dimension === "all" ? "Average SETE rating" : dimensions.find(({ id }) => id === dimension)?.name ?? "Rating";
-  return <ChartPanel title="SETE performance trend"
+  const series: TrendPoint[] = observations.map((point, index) => ({
+    ...point, change: compare(point.value, observations[index - 1]?.value ?? null, 2),
+  }));
+  const hasData = series.some((point) => point.value !== null);
+
+  function openPoint(index: number) {
+    const entry = series[index];
+    if (entry?.value != null) onOpen(entry.period, entry.rows.filter((row) => row.scores && row.responses > 0), dimension);
+  }
+
+  return <ChartPanel title="SETE Performance Across Years"
     controls={<DashboardSelect<Dimension | "all"> label="Evaluation dimension" value={dimension}
       onChange={setDimension} active={dimension !== "all"}
       options={[{ value: "all", label: "All dimensions" }, ...dimensions.map(({ id, name }) => ({ value: id, label: name }))]} />}>
     <span className="chart-unit">Rating / 5</span>
-    <TrendPlot label="SETE ratings out of 5 by semester, with a displayed range of 3 to 5" points={observations}
-      series={[{ key: "current", label: metric, color: "var(--chart-accent)" }]}
-      ticks={[3, 3.5, 4, 4.5, 5]} format={formatScore} tickFormat={(value) => String(value)}
-      selected={period.short} onSelect={(index) => {
-        const item = observations[index];
-        if (item) onOpen(item.item, item.rows.filter((row) => row.scores && row.responses > 0), dimension);
-      }} />
+    {hasData ? <div className="trend-plot" aria-label="SETE ratings by semester on a 1–5 scale">
+      <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 550, height: 172 }}>
+        <LineChart data={series} margin={{ top: 12, right: 15, left: 0, bottom: 5 }} accessibilityLayer>
+          <CartesianGrid vertical={false} stroke="var(--chart-grid)" />
+          <YAxis ticks={ratingTicks} domain={[1, 5]} tick={axis} tickLine={false} axisLine={false} width={27} allowDataOverflow />
+          <XAxis dataKey="label" tick={axis} tickLine={false} axisLine={false} minTickGap={12} tickMargin={8} />
+          <ReferenceLine x={period.short} stroke="var(--accent-line)" strokeDasharray="3 4" />
+          <Tooltip cursor={{ stroke: "var(--chart-grid)" }} content={({ active, payload }) => {
+            const point = payload?.[0]?.payload as TrendPoint | undefined;
+            if (!active || !point) return null;
+            return <div className="chart-tooltip">
+              <strong>{point.period.label}</strong>
+              <div><span>SETE</span><b>{formatScore(point.value)} / 5</b></div>
+              <div><span>Valid responses</span><b>{integer(point.responses)}</b></div>
+              <div><span>Passing rate</span><b>{formatPercent(point.passing)}</b></div>
+              {point.change !== null && <small>{signed(point.change, 2)} pts vs previous period</small>}
+            </div>;
+          }} />
+          <Line dataKey="value" type="linear" stroke="var(--chart-accent)" strokeWidth={2.4}
+            dot={({ cx, cy, index }) => cx == null || cy == null ? null : <g key={index}>
+              <circle cx={cx} cy={cy} r={12} fill="transparent" className="trend-dot-hit" onClick={() => openPoint(index)} />
+              <circle cx={cx} cy={cy} r={3.5} fill="var(--surface)" stroke="var(--chart-accent)" strokeWidth={1.6} pointerEvents="none" />
+            </g>}
+            activeDot={({ cx, cy, index }) => <g>
+              <circle cx={cx} cy={cy} r={12} fill="transparent" className="trend-dot-hit" onClick={() => openPoint(index)} />
+              <circle cx={cx} cy={cy} r={5} fill="var(--chart-accent)" stroke="var(--surface)" strokeWidth={2} pointerEvents="none" />
+            </g>}
+            connectNulls={false} isAnimationActive={animate} animationDuration={430} />
+        </LineChart>
+      </ResponsiveContainer>
+    </div> : <Empty>No SETE observations for this selection.</Empty>}
+    {hasData && <ChartReadout>{series.map((point, index) => {
+      const values = <><span>{point.label}</span><span>{formatScore(point.value)} SETE · {formatPercent(point.passing)} passing</span>
+        <small>{point.responses} responses{point.change !== null && ` · ${signed(point.change, 2)} pts vs previous`}</small></>;
+      return point.value !== null ? <button type="button" className="point-row" key={point.label} onClick={() => openPoint(index)}>
+        {values}<ArrowUpRight aria-hidden="true" />
+      </button> : <div className="point-row" key={point.label}>{values}</div>;
+    })}</ChartReadout>}
   </ChartPanel>;
 }
 
-type GroupedCourse = ReturnType<typeof groupCourses>[number];
-
-export function CoursePassingChart({ courses, onOpen }: {
-  courses: GroupedCourse[]; onOpen: (course: GroupedCourse) => void;
+export function SectionSeteChart({ assessments, selected, onOpen }: {
+  assessments: SectionAssessment[]; selected: string; onOpen: (assessment: SectionAssessment) => void;
 }) {
   const [sort, setSort] = useReportingFilter<string>("low");
-  const [page, setPage] = useReportingFilter<number>(0);
-  const graded = courses.filter(({ metrics }) => metrics.passing !== null);
-  const ordered = [...graded].sort((a, b) => sort === "name" ? a.name.localeCompare(b.name)
-    : ((a.metrics.passing ?? 0) - (b.metrics.passing ?? 0)) * (sort === "low" ? 1 : -1));
+  const [page, setPage] = useReportingFilter(0);
+  const ordered = assessments.filter(({ rating }) => rating !== null)
+    .sort((a, b) => ((a.rating ?? 0) - (b.rating ?? 0)) * (sort === "low" ? 1 : -1));
   const pageSize = 5;
-  const lastPage = Math.max(0, Math.ceil(ordered.length / pageSize) - 1);
-  const currentPage = Math.min(page, lastPage);
-  const offset = currentPage * pageSize;
+  const last = Math.max(0, Math.ceil(ordered.length / pageSize) - 1);
+  const current = Math.min(page, last);
+  const offset = current * pageSize;
   const visible = ordered.slice(offset, offset + pageSize);
-  const nextPage = currentPage < lastPage ? currentPage + 1 : 0;
 
-  return <ChartPanel title="Course passing rates"
-    controls={<DashboardSelect label="Sort course passing rates" value={sort} active={sort !== "low"}
+  return <ChartPanel title="SETE Effectiveness by Section" controls={
+    <DashboardSelect label="Sort SETE ratings" value={sort} active={sort === "high"}
       onChange={(value) => { setSort(value); setPage(0); }}
-      options={[{ value: "low", label: "Lowest first" }, { value: "high", label: "Highest first" },
-        { value: "name", label: "By course name" }]} />}>
-    {visible.length ? <div className="passing-chart">
+      options={[{ value: "low", label: "Lowest first" }, { value: "high", label: "Highest first" }]} />
+  }>
+    {visible.length ? <div className="section-bars">
       {visible.map((item) => {
-        const { metrics } = item;
-        const value = metrics.passing ?? 0;
-        const below = value < targets.passing;
-        const detail = `${metrics.passed} passed of ${metrics.graded} graded`;
-        return <button type="button" key={item.code} className="passing-row" data-below={below} onClick={() => onOpen(item)}
-          aria-label={`${item.name}, ${formatPercent(value)}, ${detail}${below ? ", below demo target" : ""}. View details`}>
-          <span className="passing-label">{item.name}</span>
-          <span className="passing-track" aria-hidden="true">
-            <span className="passing-bar" style={{ width: `${value}%` }} />
-            <span className="passing-target" style={{ left: `${targets.passing}%` }} />
+        const { row, rating, status, participation, sufficientSete } = item;
+        const title = sectionTitle(row);
+        const note = !sufficientSete ? "Limited SETE evidence" : status === "Insufficient Data" ? "Limited grades" : status;
+        const tone = sufficientSete ? reviewTones[status] : "info";
+        return <button type="button" className="section-bar-row" key={row.id} data-selected={selected === row.id}
+          data-tone={tone} onClick={() => onOpen(item)}
+          aria-label={`${title}, ${formatScore(rating)} out of 5, ${row.responses} responses, ${formatPercent(participation)} participation. ${note}. View details`}>
+          <span className="section-bar-label">{courseByCode.get(row.course)?.name ?? row.course}<small>Section {row.section}</small></span>
+          <span className="section-bar-track" aria-hidden="true"><span className="section-bar-fill" style={{ width: `${(rating ?? 0) / 5 * 100}%` }} /></span>
+          <span className="section-bar-rating"><strong>{formatScore(rating)}</strong>
+            {(tone === "critical" || tone === "warning" || tone === "info") && <i aria-hidden="true" title={note} />}
           </span>
-          <strong>{formatPercent(value)}</strong>
-          <span className="bar-tooltip chart-tooltip" aria-hidden="true">{item.code} · {detail} · {targets.passing}% demo target</span>
+          <span className="bar-tooltip chart-tooltip" aria-hidden="true">{note} · {row.responses} / {row.invitations} responses · {formatPercent(participation)}</span>
         </button>;
       })}
-      <div className="passing-axis" aria-hidden="true"><span /><div><span>0%</span><span>50%</span><span>100%</span></div><span /></div>
-      {lastPage > 0 && <div className="passing-pagination no-print">
-        <span aria-live="polite">{offset + 1}–{offset + visible.length} of {graded.length}</span>
-        <button type="button" className="text-control" onClick={() => setPage(nextPage)}>
-          {nextPage === 0 ? "First" : "Next"} <ChevronRight aria-hidden="true" />
+      <div className="section-bar-axis" aria-hidden="true"><span /><div>{[0, ...ratingTicks].map((tick) => <span key={tick}>{tick}</span>)}</div><span>/ 5</span></div>
+      {last > 0 && <div className="passing-pagination no-print">
+        <span aria-live="polite">{offset + 1}–{offset + visible.length} of {ordered.length}</span>
+        <button type="button" className="text-control" onClick={() => setPage(current < last ? current + 1 : 0)}>
+          {current === last ? "First" : "Next"} <ChevronRight aria-hidden="true" />
         </button>
       </div>}
-    </div> : <Empty>No graded enrollments for this reporting scope.</Empty>}
+    </div> : <Empty>No section ratings for this selection.</Empty>}
   </ChartPanel>;
 }
 
-export function CapacityChart({ rows, period, onOpen }: {
-  rows: Section[]; period: Period; onOpen: (name: string, rows: Section[]) => void;
-}) {
-  const groups = programs.flatMap(({ id, name }) => {
-    const programRows = rows.filter((row) => row.program === id);
-    return programRows.length ? [{ id, name, rows: programRows, metrics: summarize(programRows, period) }] : [];
-  });
-  const maximum = Math.max(4, Math.ceil(Math.max(0, ...groups.flatMap(({ metrics }) => [metrics.enrolled, metrics.seats])) / 40)) * 40;
+type ScatterDatum = { x: number; y: number; assessment: SectionAssessment };
 
-  return <ChartPanel title="Enrollment & capacity"
-    controls={<div className="chart-legend capacity-legend"><span><i className="legend-enrolled" />Enrolled</span>
-      <span><i className="legend-capacity" />Approved seats</span></div>}>
-    {groups.length ? <div className="capacity-chart">
-      {groups.map((group) => {
-        const { metrics } = group;
-        const high = metrics.capacity !== null && metrics.capacity >= targets.capacityWarning;
-        const over = metrics.enrolled > metrics.seats;
-        const above = group.rows.filter((row) => row.enrolled > row.seats).length;
-        const note = over ? "Over capacity" : above ? `${above} ${above === 1 ? "section over" : "sections over"}` : high ? "Near capacity" : null;
-        return <button type="button" className="capacity-row" key={group.id} onClick={() => onOpen(group.name, group.rows)}
-          aria-label={`${group.name}, ${metrics.enrolled} enrolled of ${metrics.seats} seats, ${formatPercent(metrics.capacity)}${note ? `, ${note}` : ""}. View details`}>
-          <span className="capacity-identity"><strong>{group.id}</strong></span>
-          <span className="capacity-scale" aria-hidden="true">
-            <span className="capacity-approved" style={{ width: `${metrics.seats / maximum * 100}%` }} />
-            <span className="capacity-enrolled" data-over={over} style={{ width: `${metrics.enrolled / maximum * 100}%` }} />
-            <span className="capacity-marker" style={{ left: `${metrics.seats / maximum * 100}%` }} />
-          </span>
-          <span className="capacity-value"><strong>{integer(metrics.enrolled)} <small>/ {integer(metrics.seats)} seats</small></strong>
-            <small data-tone={over || above ? "critical" : high ? "warning" : "neutral"}>{formatPercent(metrics.capacity)}{note && ` · ${note}`}</small>
-          </span>
-          <span className="bar-tooltip chart-tooltip" aria-hidden="true">{group.name}</span>
-        </button>;
-      })}
-      <div className="capacity-axis" aria-hidden="true"><span /><div>{[0, 1, 2, 3, 4].map((step) =>
-        <span key={step}>{integer(step * maximum / 4)}</span>)}</div><span /></div>
-    </div> : <Empty>No capacity records for this reporting scope.</Empty>}
+export function SetePassingScatter({ assessments, selected, onOpen }: {
+  assessments: SectionAssessment[];
+  selected: string;
+  onOpen: (assessment: SectionAssessment) => void;
+}) {
+  const animate = useChartMotion();
+  const points: ScatterDatum[] = assessments.flatMap((assessment) => assessment.rating === null || assessment.passing === null
+    ? [] : [{ x: assessment.rating, y: assessment.passing, assessment }]);
+
+  function renderPoint({ cx, cy, payload, isActive }: ScatterShapeProps) {
+    const datum = payload as ScatterDatum | undefined;
+    if (cx == null || cy == null || !datum) return null;
+    const item = datum.assessment;
+    const highlighted = isActive || selected === item.row.id;
+    return <g className="scatter-point" data-selected={highlighted} data-limited={!item.sufficientSete}
+      data-tone={reviewTones[item.status]} onClick={() => onOpen(item)}>
+      <circle cx={cx} cy={cy} r={12} fill="transparent" />
+      <circle className="scatter-mark" cx={cx} cy={cy} r={highlighted ? 6.5 : 4.6} pointerEvents="none" />
+    </g>;
+  }
+
+  return <ChartPanel title="SETE vs. Student Passing Rate" controls={<details className="context-disclosure no-print">
+    <summary aria-label="How to interpret the scatter plot"><Info aria-hidden="true" /></summary>
+    <p>Each point is a section with both results available. Hollow points have limited SETE evidence. Grades and SETE measure different outcomes, and a relationship cannot establish causation.</p>
+  </details>}>
+    {points.length ? <>
+      <span className="chart-unit">Passing rate (%)</span>
+      <div className="scatter-plot" aria-label="Section scatter plot, SETE rating from 1 to 5 and passing rate from 0 to 100 percent">
+        <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 780, height: 210 }}>
+          <ScatterChart margin={{ top: 9, right: 16, bottom: 4, left: 0 }} accessibilityLayer>
+            <CartesianGrid stroke="var(--chart-grid)" />
+            <XAxis type="number" dataKey="x" domain={[1, 5]} ticks={ratingTicks} tick={axis} tickLine={false} axisLine={false} allowDataOverflow />
+            <YAxis type="number" dataKey="y" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tick={axis}
+              tickLine={false} axisLine={false} width={31} allowDataOverflow />
+            <Tooltip cursor={{ stroke: "var(--accent-line)", strokeDasharray: "4 4" }} content={({ active, payload }) => {
+              const datum = payload?.[0]?.payload as ScatterDatum | undefined;
+              if (!active || !datum) return null;
+              const { row, rating, passing, participation, sufficientSete } = datum.assessment;
+              return <div className="chart-tooltip scatter-tooltip">
+                <strong>{sectionTitle(row)}</strong>
+                <small>{facultyById.get(row.faculty)?.name ?? row.faculty}</small>
+                <div><span>SETE</span><b>{formatScore(rating)} / 5</b></div>
+                <div><span>Passing</span><b>{formatPercent(passing)}</b></div>
+                <div><span>Evaluated students</span><b>{integer(row.responses)}</b></div>
+                <div><span>Participation</span><b>{formatPercent(participation)}</b></div>
+                {!sufficientSete && <small>Limited SETE evidence</small>}
+              </div>;
+            }} />
+            <Scatter data={points} shape={renderPoint} activeShape={renderPoint} isAnimationActive={animate} animationDuration={390} />
+          </ScatterChart>
+        </ResponsiveContainer>
+      </div>
+      <span className="chart-unit scatter-unit">SETE rating / 5</span>
+      <ChartReadout>{points.map(({ assessment }) => <button type="button" className="point-row" key={assessment.row.id} onClick={() => onOpen(assessment)}>
+        <span>{sectionTitle(assessment.row)}</span><span>{formatScore(assessment.rating)} SETE · {formatPercent(assessment.passing)} passing</span>
+        <ArrowUpRight aria-hidden="true" />
+      </button>)}</ChartReadout>
+    </> : <Empty>No sections have both SETE and finalized grades in this selection.</Empty>}
   </ChartPanel>;
 }

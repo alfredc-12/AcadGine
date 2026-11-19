@@ -83,6 +83,7 @@ export interface Section {
 const enrollmentChanges = [-7, -5, -4, -2, 0, 2];
 const ratingChanges = [-0.28, -0.16, -0.21, -0.08, -0.04, 0.05];
 const passingChanges = [-4, -1, -2, 1, 2, 0];
+const latestSectionRatingChanges = [0.12, -0.07, 0.04, -0.23, 0.14, -0.055];
 
 export const sections: Section[] = periods.flatMap((period) =>
   courses.flatMap((course, courseIndex) =>
@@ -94,7 +95,8 @@ export const sections: Section[] = periods.flatMap((period) =>
       const participation = (pressure ? 0.49 : 0.65 + ((courseIndex + group) % 4) * 0.038)
         + (period.id === latest.id ? -0.06 : 0.012 * (period.id % 3));
       const responses = noEvaluation ? 0 : Math.round(enrolled * participation);
-      const score = course.rating + ratingChanges[period.id] - group * 0.06;
+      const sectionRatingChange = period.id === latest.id ? latestSectionRatingChanges[(courseIndex * 2 + group) % latestSectionRatingChanges.length] : 0;
+      const score = course.rating + ratingChanges[period.id] - group * 0.06 + sectionRatingChange;
       const engagementShift = period.id === latest.id ? -0.31 : 0;
       const date = period.snapshot.slice(0, 7);
       const deadlineDay = period.semester === 1 ? 17 : 5;

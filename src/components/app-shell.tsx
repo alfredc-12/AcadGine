@@ -4,30 +4,32 @@ import Image from "next/image";
 import { Moon, Sun, UserRound } from "lucide-react";
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { courseByCode, periods, programs, type Period, type Section } from "@/data/academic";
-import { defaultScope, getNotices, scopedRows, type Notice, type Scope } from "@/lib/analytics";
+import { defaultScope, scopedRows, sectionKey, sectionTitle, type Scope } from "@/lib/analytics";
 import { Sheet } from "@/components/ui/sheet";
 
 type Theme = "light" | "dark";
-type DashboardFilters = { program: Scope["program"]; course: string };
+type DashboardFilters = { program: Scope["program"]; course: string; section: string };
 type Detail = { title: string; description?: string; content: ReactNode };
 
 type DashboardContext = {
   scope: Scope;
   course: string;
+  section: string;
+  availableSections: Section[];
   setProgram: (program: Scope["program"]) => void;
   setCourse: (course: string) => void;
+  setSection: (section: string) => void;
   period: Period;
   previousPeriod?: Period;
   rows: Section[];
   previous: Section[];
-  notices: Notice[];
   filterVersion: number;
   resetFilters: () => void;
   openDetail: (detail: Detail) => void;
 };
 
 const Dashboard = createContext<DashboardContext | null>(null);
-const defaultFilters: DashboardFilters = { program: defaultScope.program, course: "all" };
+const defaultFilters: DashboardFilters = { program: defaultScope.program, course: "all", section: "all" };
 
 export function useDashboard() {
   const context = useContext(Dashboard);
@@ -81,23 +83,34 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   const scope = useMemo<Scope>(() => ({ period: defaultScope.period, program: filters.program }), [filters.program]);
-  const { course } = filters;
+  const { course, section } = filters;
   const period = periods[scope.period];
   const previousPeriod = periods[scope.period - 1];
-  const rows = useMemo(() => scopedRows(scope, course), [scope, course]);
-  const previous = useMemo(() => scopedRows({ ...scope, period: scope.period - 1 }, course), [scope, course]);
-  const notices = useMemo(() => getNotices(rows, period, previous), [rows, period, previous]);
+  const availableSections = useMemo(() => scopedRows(scope, course), [scope, course]);
+  const rows = useMemo(() => section === "all" ? availableSections : availableSections.filter((row) => sectionKey(row) === section),
+    [availableSections, section]);
+  const previous = useMemo(() => scopedRows({ ...scope, period: scope.period - 1 }, course, section), [scope, course, section]);
   const programLabel = programs.find(({ id }) => id === scope.program)?.name ?? "All programs";
+  const selectionLabel = section !== "all" && rows[0] ? sectionTitle(rows[0])
+    : courseByCode.get(course)?.name;
 
   function setProgram(program: Scope["program"]) {
-    setFilters((prior) => ({
-      program,
-      course: program === "all" || courseByCode.get(prior.course)?.program === program ? prior.course : "all",
-    }));
+    setFilters((prior) => {
+      const course = program === "all" || courseByCode.get(prior.course)?.program === program ? prior.course : "all";
+      const section = scopedRows({ ...defaultScope, program }, course, prior.section).length ? prior.section : "all";
+      return { program, course, section };
+    });
   }
 
   function setCourse(course: string) {
-    setFilters((prior) => ({ ...prior, course }));
+    setFilters((prior) => {
+      const section = scopedRows({ ...defaultScope, program: prior.program }, course, prior.section).length ? prior.section : "all";
+      return { ...prior, course, section };
+    });
+  }
+
+  function setSection(section: string) {
+    setFilters((prior) => ({ ...prior, section }));
   }
 
   function resetFilters() {
@@ -112,7 +125,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     setDetailOpen(true);
   }
 
-  return <Dashboard.Provider value={{ scope, course, setProgram, setCourse, period, previousPeriod, rows, previous, notices,
+  return <Dashboard.Provider value={{ scope, course, section, availableSections, setProgram, setCourse, setSection, period, previousPeriod, rows, previous,
     filterVersion, resetFilters, openDetail }}>
     <a className="skip-link" href="#main-content">Skip to content</a>
     <header className="topbar">
@@ -131,7 +144,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <main ref={main} className="canvas" id="main-content" tabIndex={-1}>
       <div className="print-masthead">
         <span className="print-brand"><AcadgineMark /><strong>Acadgine</strong></span>
-        <span>{period.label} · {programLabel}{course !== "all" && ` · ${course}`} · Illustrative data</span>
+        <span>{period.label} · {programLabel}{selectionLabel && ` · ${selectionLabel}`} · Illustrative data</span>
       </div>
       {children}
     </main>

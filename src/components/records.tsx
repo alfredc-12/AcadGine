@@ -2,17 +2,12 @@
 
 import { ArrowDown, ArrowRight, ArrowUp, ChevronLeft, ChevronRight, Download, Search } from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
-import { courseByCode, dimensions, facultyById, type Period, type Section } from "@/data/academic";
-import { averageSete, formatPercent, formatScore, gradeStatus, percent, type Tone } from "@/lib/analytics";
+import type { Tone } from "@/lib/analytics";
 import { Badge, Button, Empty, Input, Table } from "@/components/ui/primitives";
 
 export function Status({ children, tone = "neutral" }: { children: ReactNode; tone?: Tone }) {
   return <Badge data-tone={tone}><span className="status-dot" aria-hidden="true" />{children}</Badge>;
 }
-
-export const gradeTone: Record<ReturnType<typeof gradeStatus>, Tone> = {
-  "On time": "positive", Late: "warning", Overdue: "critical", Upcoming: "info",
-};
 
 type Cell = string | number | null;
 export type Column<Row> = {
@@ -46,9 +41,10 @@ function download<Row>(name: string, columns: Column<Row>[], rows: Row[]) {
 }
 
 export function RecordsTable<Row>({ label, rows, columns, keyOf, onOpen, exportName, pageSize = 8,
-  simple = false, tools }: {
+  simple = false, tools, rowLabel }: {
   label: string; rows: Row[]; columns: Column<Row>[]; keyOf: (row: Row) => string;
   onOpen?: (row: Row) => void; exportName?: string; pageSize?: number; simple?: boolean; tools?: ReactNode;
+  rowLabel?: (row: Row) => string;
 }) {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<Sort>();
@@ -112,11 +108,12 @@ export function RecordsTable<Row>({ label, rows, columns, keyOf, onOpen, exportN
         } : undefined}>
         {columns.map((column, index) => <td key={column.id} className={column.numeric ? "number" : undefined}>
           {index === 0 && onOpen
-            ? <button type="button" className="row-link" onClick={() => onOpen(row)}>{column.display?.(row) ?? column.value(row)}</button>
+            ? <button type="button" className="row-link" aria-label={rowLabel ? `View details for ${rowLabel(row)}` : undefined}
+              onClick={() => onOpen(row)}>{column.display?.(row) ?? column.value(row)}</button>
             : column.display?.(row) ?? column.value(row) ?? <span className="muted">N/A</span>}
         </td>)}
         {onOpen && <td className="row-action"><Button size="icon" variant="ghost"
-          aria-label={`View details for ${columns[0].value(row)}`} onClick={() => onOpen(row)}><ArrowRight /></Button></td>}
+          aria-label={`View details for ${rowLabel?.(row) ?? columns[0].value(row)}`} onClick={() => onOpen(row)}><ArrowRight /></Button></td>}
       </tr>)}</tbody>
     </Table> : <Empty />}
     {!simple && <div className="pagination">
@@ -127,55 +124,4 @@ export function RecordsTable<Row>({ label, rows, columns, keyOf, onOpen, exportN
       </div>
     </div>}
   </div>;
-}
-
-export function sectionColumns(period: Period): Column<Section>[] {
-  return [
-    { id: "section", title: "Course", value: (row) => `${row.course} · ${row.section} ${courseByCode.get(row.course)?.name ?? ""}`,
-      display: (row) => <><span className="cell-title" title={row.course}>{courseByCode.get(row.course)?.name ?? row.course}</span><small>Section {row.section}</small></> },
-    { id: "faculty", title: "Faculty", value: (row) => facultyById.get(row.faculty)?.name ?? row.faculty },
-    { id: "enrolled", title: "Enrolled", value: (row) => row.enrolled, numeric: true },
-    { id: "seats", title: "Capacity", value: (row) => row.seats, numeric: true },
-    { id: "passing", title: "Passing (%)", value: (row) => percent(row.passed, row.graded), numeric: true,
-      display: (row) => formatPercent(percent(row.passed, row.graded)) },
-    { id: "sete", title: "SETE (/5)", value: (row) => averageSete([row]), numeric: true, display: (row) => formatScore(averageSete([row])) },
-    { id: "grade", title: "Grades", value: (row) => gradeStatus(row, period),
-      display: (row) => <Status tone={gradeTone[gradeStatus(row, period)]}>{gradeStatus(row, period)}</Status> },
-  ];
-}
-
-export function SectionTable({ rows, period, metric }: { rows: Section[]; period: Period; metric?: string }) {
-  const [identity, instructor, enrolled, seats, passing, sete, grade] = sectionColumns(period);
-  const counts = [
-    { id: "graded", title: "Graded", value: (row: Section) => row.graded, numeric: true },
-    { id: "passed", title: "Passed", value: (row: Section) => row.passed, numeric: true },
-  ];
-  const evaluations = [
-    { id: "invitations", title: "Eligible invitations", value: (row: Section) => row.invitations, numeric: true },
-    { id: "responses", title: "Valid responses", value: (row: Section) => row.responses, numeric: true },
-  ];
-  let columns: Column<Section>[];
-  switch (metric) {
-    case "passing": columns = [identity, ...counts, passing]; break;
-    case "capacity": columns = [identity, enrolled, seats,
-      { id: "utilization", title: "Utilization (%)", value: (row) => percent(row.enrolled, row.seats), numeric: true,
-        display: (row) => formatPercent(percent(row.enrolled, row.seats)) }]; break;
-    case "grades":
-    case "submission": columns = [identity, instructor,
-      { id: "deadline", title: "Deadline", value: (row) => row.deadline },
-      { id: "finalized", title: "Finalized", value: (row) => row.finalized }, grade]; break;
-    case "participation": columns = [identity, ...evaluations,
-      { id: "participation", title: "Participation (%)", value: (row) => percent(row.responses, row.invitations), numeric: true,
-        display: (row) => formatPercent(percent(row.responses, row.invitations)) }]; break;
-    case "sete": columns = [identity, ...evaluations, sete]; break;
-    default: {
-      const dimension = dimensions.find(({ id }) => id === metric);
-      columns = dimension ? [identity, evaluations[1], {
-        id: dimension.id, title: "Dimension rating (/5)", numeric: true,
-        value: (row) => averageSete([row], dimension.id),
-        display: (row) => formatScore(averageSete([row], dimension.id)),
-      }] : [identity, instructor, enrolled, seats, passing, sete, grade];
-    }
-  }
-  return <RecordsTable label="Contributing sections" rows={rows} columns={columns} keyOf={(row) => row.id} />;
 }

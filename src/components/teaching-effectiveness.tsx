@@ -3,17 +3,20 @@
 import { ArrowDownRight, ArrowUpRight, Info, Minus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/primitives";
 import { dimensions, type Dimension, type Section } from "@/data/academic";
-import { averageSete, compare, formatPercent, formatScore, integer, signed, targets, type summarize } from "@/lib/analytics";
+import { averageSete, compare, formatPercent, formatScore, integer, signed, targets, type SectionAssessment, type summarize } from "@/lib/analytics";
 
-export function TeachingEffectiveness({ rows, previous, metrics, onOpenDimension }: {
+export function TeachingEffectiveness({ rows, assessments, metrics, onOpenDimension }: {
   rows: Section[];
-  previous: Section[];
+  assessments: SectionAssessment[];
   metrics: ReturnType<typeof summarize>;
   onOpenDimension: (dimension: Dimension, name: string, summary: string) => void;
 }) {
+  const pairs = assessments.flatMap(({ row, previous, change }) => previous && change !== null ? [{ row, previous }] : []);
+  const currentComparable = pairs.map(({ row }) => row);
+  const previousComparable = pairs.map(({ previous }) => previous);
   const ratings = dimensions.map((dimension) => {
     const value = averageSete(rows, dimension.id);
-    return { ...dimension, value, change: compare(value, averageSete(previous, dimension.id), 2) };
+    return { ...dimension, value, change: compare(averageSete(currentComparable, dimension.id), averageSete(previousComparable, dimension.id), 2) };
   });
   const declines = ratings.filter(({ change }) => change !== null && change <= -targets.dimensionDrop)
     .sort((a, b) => (a.change ?? 0) - (b.change ?? 0));
@@ -32,7 +35,7 @@ export function TeachingEffectiveness({ rows, previous, metrics, onOpenDimension
       <h2 id="teaching-title">Teaching Effectiveness</h2>
       <details className="context-disclosure">
         <summary aria-label="About SETE ratings" title="About SETE ratings"><Info aria-hidden="true" /></summary>
-        <p>Ratings use a 5-point scale, weighted by valid responses. Trend arrows compare periods. Review ratings alongside coverage and other teaching evidence.</p>
+        <p>These example dimensions use a 5-point scale, weighted by valid responses. Trend arrows use comparable sections with sufficient evidence in both periods. Review SETE alongside other teaching evidence.</p>
       </details>
     </header>
     <div className="teaching-grid">
@@ -45,10 +48,11 @@ export function TeachingEffectiveness({ rows, previous, metrics, onOpenDimension
           <div className="dimension-list">
             {ratings.map((rating) => {
               const { id, name, value, change } = rating;
-              const trend = change === null ? "No previous-period comparison" : `${signed(change, 2)} points vs previous period`;
+              const needsReview = change !== null && change <= -targets.dimensionDrop;
+              const trend = change === null ? "No previous-period comparison" : `${signed(change, 2)} points vs previous comparable period`;
               const TrendIcon = change === null || change === 0 ? Minus : change < 0 ? ArrowDownRight : ArrowUpRight;
-              return <button className="dimension-row" type="button" key={id} onClick={() => openRating(rating)}
-                aria-label={`${name}, ${value === null ? "no ratings" : `${formatScore(value)} out of 5`}. ${trend}. View details`}>
+              return <button className="dimension-row" type="button" key={id} onClick={() => openRating(rating)} data-review={needsReview}
+                aria-label={`${name}, ${value === null ? "no ratings" : `${formatScore(value)} out of 5`}. ${trend}.${needsReview ? " Meets demo review threshold." : ""} View details`}>
                 <span className="dimension-name">{name}</span>
                 <span className="dimension-track" aria-hidden="true">
                   <span style={{ width: `${(value ?? 0) / 5 * 100}%` }} />

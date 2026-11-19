@@ -1,124 +1,28 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import {
-  AlertTriangle, ArrowDownRight, ArrowRight, ArrowUpRight, ChevronRight, Info, Minus, Printer, RotateCcw,
+  Activity, AlertTriangle, ArrowDownRight, ArrowRight, ArrowUpRight, ChevronRight, ClipboardCheck,
+  GraduationCap, Info, Minus, Printer, RotateCcw, TrendingUp, Vote,
 } from "lucide-react";
 import { useDashboard, useReportingFilter } from "@/components/app-shell";
-import { CapacityChart, CoursePassingChart, SeteTrend } from "@/components/charts";
+import { SectionSeteChart, SetePassingScatter, SeteTrend } from "@/components/charts";
 import { EnrollmentForecast } from "@/components/forecast";
+import { SectionDetails, SectionPerformanceTable } from "@/components/section-performance";
 import { TeachingEffectiveness } from "@/components/teaching-effectiveness";
-import { RecordsTable, SectionTable, Status, sectionColumns } from "@/components/records";
+import { Status } from "@/components/records";
 import { Alert, Button, Card, CardContent, CardHeader, CardTitle } from "@/components/ui/primitives";
 import { DashboardSelect } from "@/components/ui/select";
-import { courseByCode, courses as allCourses, facultyById, programs, type Period, type Section } from "@/data/academic";
-import { compare, formatPercent, formatScore, gradeStatus, groupCourses, integer, signed, summarize, targets,
-  type Notice, type Scope, type Tone } from "@/lib/analytics";
-
-function useRecordDetails() {
-  const { openDetail, period } = useDashboard();
-  return {
-    openRecords(title: string, rows: Section[], detailPeriod: Period = period, description = detailPeriod.label, summary?: string, metric?: string) {
-      openDetail({ title, description, content: <>{summary && <p className="detail-summary">{summary}</p>}
-        <SectionTable rows={rows} period={detailPeriod} metric={metric} /></> });
-    },
-    openSection(row: Section) {
-      const title = `${courseByCode.get(row.course)?.name ?? row.course} · Section ${row.section}`;
-      const grade = row.finalized ? `Finalized ${row.finalized}` : "Awaiting submission";
-      openDetail({ title, description: `${row.course} · ${facultyById.get(row.faculty)?.name ?? row.faculty} · ${period.label}`,
-        content: <><dl className="detail-facts">
-          <div><dt>Grade deadline</dt><dd>{row.deadline}</dd></div><div><dt>Submission</dt><dd>{grade}</dd></div>
-          <div><dt>Passed / graded</dt><dd>{row.passed} / {row.graded}</dd></div>
-          <div><dt>Valid SETE responses / invitations</dt><dd>{row.responses} / {row.invitations}</dd></div>
-        </dl><SectionTable rows={[row]} period={period} /></>,
-      });
-    },
-    openAlerts(notices: Notice[]) {
-      openDetail({
-        title: "Academic alerts", description: period.label,
-        content: <div className="notice-list">{notices.map((notice) => <details key={notice.id} className="disclosure">
-          <summary><span>{notice.title}</span><ChevronRight aria-hidden="true" /></summary>
-          <div className="disclosure-body">
-            <p>{notice.message} {notice.action}.</p>
-            <SectionTable rows={notice.rows} period={period} metric={notice.id} />
-          </div>
-        </details>)}</div>,
-      });
-    },
-  };
-}
-
-function NoticeBanner({ notice, more, onOpen, onOpenAll }: {
-  notice: Notice; more: number; onOpen: () => void; onOpenAll: () => void;
-}) {
-  return <Alert className="priority-notice" data-tone={notice.tone}>
-    <div className="notice-icon" aria-hidden="true">{notice.tone === "info" ? <Info /> : <AlertTriangle />}</div>
-    <div className="notice-copy">
-      <span className="sr-only">{notice.tone === "info" ? "Information" : notice.tone === "critical" ? "Critical alert" : "Warning"}</span>
-      <strong>{notice.title}</strong><p>{notice.message}</p>
-    </div>
-    <div className="notice-actions no-print">
-      {more > 0 && <Button variant="ghost" size="sm" onClick={onOpenAll}
-        aria-label={`Show ${more} more ${more === 1 ? "alert" : "alerts"}`} title="More alerts">
-        +{more} <ChevronRight data-icon="inline-end" />
-      </Button>}
-      <Button variant="outline" size="icon" onClick={onOpen} aria-label={notice.action} title={notice.action}><ArrowRight /></Button>
-    </div>
-  </Alert>;
-}
-
-const insightCopy: Record<string, string> = {
-  capacity: "Consider opening seats in the affected sections.",
-  grades: "Follow up with the section leads.",
-  passing: "Review course outcomes before planning academic support.",
-  participation: "Check coverage before interpreting ratings.",
-};
-
-function insightAction(notice: Notice) {
-  switch (notice.id) {
-    case "grades": return "Follow up";
-    case "participation": return "Investigate";
-    case "sete": return "Check coverage";
-    default: return "Review";
-  }
-}
-
-function Insights({ findings, onOpen }: { findings: Notice[]; onOpen: (notice: Notice) => void }) {
-  return <Card className="insights-panel" aria-labelledby="insights-title">
-    <CardHeader><CardTitle as="h3" id="insights-title">Insights &amp; Actions</CardTitle></CardHeader>
-    <CardContent>
-      {findings.length ? <div className="insight-list">
-        {findings.map((notice) => <button type="button" className="insight-row" key={notice.id} onClick={() => onOpen(notice)}>
-          <span className="insight-icon" aria-hidden="true" data-tone={notice.tone}>{notice.tone === "info" ? <Info /> : <AlertTriangle />}</span>
-          <span className="insight-label"><strong>{notice.title}</strong><small>{insightAction(notice)}</small></span>
-          <ArrowUpRight aria-hidden="true" />
-        </button>)}
-      </div> : <p className="empty-state">No follow-ups flagged.</p>}
-    </CardContent>
-  </Card>;
-}
-
-function getFindings(notices: Notice[], rows: Section[], metrics: ReturnType<typeof summarize>) {
-  const findings = notices.slice(0, 3);
-  if (findings.length < 3 && metrics.responses > 0 && !notices.some(({ id }) => id === "participation")) {
-    findings.push({
-      id: "sete", tone: "info", title: "Teaching evaluation coverage",
-      message: `${integer(metrics.responses)} valid responses across ${metrics.coverage} sections.`,
-      action: "Check section coverage before comparing ratings", rows: rows.filter((row) => row.responses > 0),
-    });
-  }
-  if (findings.length < 3 && metrics.seats > metrics.enrolled && !notices.some(({ id }) => id === "capacity")) {
-    findings.push({
-      id: "capacity", tone: "info", title: "Seats available",
-      message: `${integer(metrics.seats - metrics.enrolled)} approved seats remain across the selected sections.`,
-      action: "Review availability before opening another section", rows,
-    });
-  }
-  return findings;
-}
+import { courses, programs, type Dimension, type Period, type Section } from "@/data/academic";
+import {
+  assessSections, averageSete, compare, formatPercent, formatScore, integer, percent, reviewTones, scopedRows,
+  sectionFindings, sectionKey, sectionTitle, signed, summarize, targets,
+  type Scope, type SectionAssessment, type SectionFinding, type ReviewStatus, type Tone,
+} from "@/lib/analytics";
 
 function OverviewFilters() {
-  const { scope, course, setProgram, setCourse, resetFilters } = useDashboard();
-  const coursesInScope = allCourses.filter(({ program }) => scope.program === "all" || program === scope.program);
+  const { scope, course, section, availableSections, setProgram, setCourse, setSection, resetFilters } = useDashboard();
+  const subjects = courses.filter(({ program }) => scope.program === "all" || program === scope.program);
 
   return <div className="overview-filters no-print" role="group" aria-label="Dashboard filters">
     <div className="filter-field">
@@ -128,10 +32,18 @@ function OverviewFilters() {
         options={[{ value: "all", label: "All programs" }, ...programs.map(({ id, name }) => ({ value: id, label: name }))]} />
     </div>
     <div className="filter-field">
-      <label htmlFor="course-filter">Course</label>
-      <DashboardSelect id="course-filter" label="Course" value={course} onChange={setCourse}
-        active={course !== "all"} disabled={!coursesInScope.length}
-        options={[{ value: "all", label: "All courses" }, ...coursesInScope.map(({ code, name }) => ({ value: code, label: `${code} · ${name}` }))]} />
+      <label htmlFor="subject-filter">Subject</label>
+      <DashboardSelect id="subject-filter" label="Subject" value={course} onChange={setCourse}
+        active={course !== "all"} disabled={!subjects.length}
+        options={[{ value: "all", label: "All subjects" }, ...subjects.map(({ code, name }) => ({ value: code, label: name }))]} />
+    </div>
+    <div className="filter-field">
+      <label htmlFor="section-filter">Section</label>
+      <DashboardSelect id="section-filter" label="Section" value={section} onChange={setSection}
+        active={section !== "all"} disabled={!availableSections.length}
+        options={[{ value: "all", label: "All sections" }, ...availableSections.map((row) => ({
+          value: sectionKey(row), label: course === "all" ? sectionTitle(row) : `Section ${row.section}`,
+        }))]} />
     </div>
     <Button className="filter-reset" variant="ghost" onClick={resetFilters}>
       <RotateCcw data-icon="inline-start" /> Reset filters
@@ -139,54 +51,138 @@ function OverviewFilters() {
   </div>;
 }
 
+function PriorityAlert({ notice, more, onOpen, onMore }: {
+  notice: SectionFinding; more: number; onOpen: () => void; onMore: () => void;
+}) {
+  const Icon = notice.tone === "info" ? Info : AlertTriangle;
+  return <Alert className="priority-notice" data-tone={notice.tone}>
+    <div className="notice-icon"><Icon aria-hidden="true" /></div>
+    <div className="notice-copy">
+      <strong>{notice.title}</strong><p>{notice.summary}</p>
+    </div>
+    <div className="notice-actions no-print">
+      {more > 0 && <Button variant="ghost" size="sm" onClick={onMore}
+        aria-label={`Show ${more} more ${more === 1 ? "finding" : "findings"}`} title="More findings">
+        +{more} <ChevronRight data-icon="inline-end" />
+      </Button>}
+      <Button variant="outline" size="icon" onClick={onOpen} aria-label={notice.action} title={notice.action}><ArrowRight /></Button>
+    </div>
+  </Alert>;
+}
+
+function Insights({ findings, onOpen }: { findings: SectionFinding[]; onOpen: (finding: SectionFinding) => void }) {
+  return <Card className="insights-panel" aria-labelledby="insights-title">
+    <CardHeader><CardTitle as="h3" id="insights-title">Insights &amp; Actions</CardTitle></CardHeader>
+    <CardContent>
+      {findings.length ? <div className="insight-list">
+        {findings.map((finding) => {
+          const Icon = finding.tone === "positive" ? TrendingUp : finding.tone === "info" ? Info : AlertTriangle;
+          return <button type="button" className="insight-row" key={finding.id} onClick={() => onOpen(finding)}>
+            <span className="insight-icon" data-tone={finding.tone}><Icon aria-hidden="true" /></span>
+            <span className="insight-label"><strong>{finding.title}</strong><small>{finding.action}</small></span>
+            <ArrowUpRight aria-hidden="true" />
+          </button>;
+        })}
+      </div> : <p className="empty-state">No additional findings for this selection.</p>}
+    </CardContent>
+  </Card>;
+}
+
 export function Overview() {
-  const { scope, course, rows, previous, period, previousPeriod, notices, filterVersion } = useDashboard();
-  const { openRecords, openSection, openAlerts } = useRecordDetails();
-  const [status, setStatus] = useReportingFilter<string>("all");
-  const metrics = summarize(rows, period);
-  const prior = previousPeriod ? summarize(previous, previousPeriod) : null;
-  const courses = groupCourses(rows, period);
-  const capacityFlag = rows.some((row) => row.enrolled > row.seats);
-  const activeAlerts = notices[0];
-  const findings = getFindings(notices, rows, metrics);
-  const records = status === "all" ? rows : rows.filter((row) => gradeStatus(row, period) === status);
-  const readNotice = (notice: Notice) =>
-    openRecords(notice.title, notice.rows, period, period.label, `${notice.message} ${notice.action}.`, notice.id);
-  function readInsight(notice: Notice) {
-    const followUp = notice.tone === "info" ? undefined : insightCopy[notice.id];
-    openRecords(notice.title, notice.rows, period, period.label, `${notice.message} ${followUp ?? `${notice.action}.`}`, notice.id);
+  const { scope, course, section, rows, previous, period, previousPeriod, filterVersion, openDetail } = useDashboard();
+  const [status, setStatus] = useReportingFilter<ReviewStatus | "all">("all");
+  const [openedSection, setOpenedSection] = useState("");
+  const assessments = useMemo(() => assessSections(rows, previous), [rows, previous]);
+  const metrics = summarize(rows);
+  const prior = summarize(previous);
+  const evaluated = assessments.filter((item) => item.evaluated);
+  const review = assessments.filter(({ status }) => status === "Needs Review");
+  const comparable = assessments.filter(({ change }) => change !== null);
+  const comparableRating = averageSete(comparable.map(({ row }) => row));
+  const priorComparableRating = averageSete(comparable.flatMap(({ previous: record }) => record ? [record] : []));
+  const improved = comparable.filter((item) => item.improved);
+  const improvement = percent(improved.length, comparable.length);
+  const records = status === "all" ? assessments : assessments.filter((item) => item.status === status);
+  const findings = sectionFindings(assessments);
+  const alerts = findings.filter((finding) => finding.tone !== "positive");
+  const priority = alerts[0];
+  const insights = findings.filter((finding) => finding.id !== priority?.id).slice(0, 3);
+  const selected = section !== "all" ? rows[0]?.id ?? "" : openedSection;
+
+  function showRecords(title: string, records: SectionAssessment[], summary: string, options?: { comparison?: boolean; dimension?: Dimension }) {
+    openDetail({ title, description: period.label, content: <>
+      <p className="detail-summary">{summary}</p>
+      <SectionPerformanceTable assessments={records} {...options} />
+    </> });
   }
 
-  const kpis = [
-    { key: "passing", name: "Passing rate", value: metrics.passing, previous: prior?.passing,
-      detail: `${integer(metrics.passed)} of ${integer(metrics.graded)} graded enrollments passed`, benchmark: `Demo target ${targets.passing}%`,
-      status: metrics.passing === null ? "No grades" : metrics.passing >= targets.passing ? "On target" : "Below target",
-      tone: metrics.passing === null ? "neutral" : metrics.passing >= targets.passing ? "positive" : "warning",
-      rows: rows.filter((row) => row.graded > 0) },
-    { key: "capacity", name: "Capacity used", value: metrics.capacity, previous: prior?.capacity,
-      detail: `${integer(metrics.enrolled)} of ${integer(metrics.seats)} approved seats`, benchmark: `Demo warning at ${targets.capacityWarning}%`,
-      status: metrics.capacity === null ? "No seats" : capacityFlag ? "Section overflow" : metrics.capacity >= targets.capacityWarning ? "Near capacity" : "Within capacity",
-      tone: metrics.capacity === null ? "neutral" : capacityFlag ? "critical" : metrics.capacity >= targets.capacityWarning ? "warning" : "positive",
-      rows },
-    { key: "submission", name: "On-time grades", value: metrics.submission, previous: prior?.submission,
-      detail: `${metrics.finalized} finalized · ${metrics.overdue} overdue`, benchmark: `Demo target ${targets.onTime}%`,
-      status: metrics.submission === null ? "No deadlines" : metrics.overdue ? "Grades overdue" : metrics.submission >= targets.onTime ? "On target" : "Below target",
-      tone: metrics.submission === null ? "neutral" : metrics.overdue || metrics.submission < targets.onTime ? "warning" : "positive",
-      rows: rows.filter((row) => row.deadline <= period.snapshot) },
-    { key: "sete", name: "SETE rating", value: metrics.sete, previous: prior?.sete,
-      detail: `${metrics.coverage} of ${rows.length} sections evaluated`, benchmark: "5-point scale",
-      status: metrics.sete === null ? "No responses" : "Evaluated", tone: metrics.sete === null ? "neutral" : "info",
-      rows: rows.filter((row) => row.scores && row.responses > 0) },
-    { key: "participation", name: "SETE response rate", value: metrics.participation, previous: prior?.participation,
-      detail: `${integer(metrics.responses)} of ${integer(metrics.invitations)} invitations`, benchmark: `Demo target ${targets.participation}%`,
-      status: metrics.participation === null ? "No invitations" : metrics.participation >= targets.participation ? "On target" : "Low participation",
-      tone: metrics.participation === null ? "neutral" : metrics.participation >= targets.participation ? "positive" : "warning",
-      rows: rows.filter((row) => row.invitations > 0) },
+  function showSection(item: SectionAssessment) {
+    setOpenedSection(item.row.id);
+    openDetail({ title: sectionTitle(item.row), description: period.label,
+      content: <SectionDetails assessment={item} period={period} /> });
+  }
+
+  function showFinding(finding: SectionFinding) {
+    showRecords(finding.title, finding.sections, `${finding.summary}. ${finding.action}.`,
+      { comparison: finding.id === "decline" || finding.id === "improved" });
+  }
+
+  function showAlerts() {
+    openDetail({ title: "Additional findings", description: period.label, content: <div className="notice-list">
+      {alerts.slice(1).map((finding) => <details className="disclosure" key={finding.id}>
+        <summary>{finding.title}<ChevronRight aria-hidden="true" /></summary>
+        <div className="disclosure-body"><p>{finding.summary}. {finding.action}.</p>
+          <SectionPerformanceTable assessments={finding.sections} comparison={finding.id === "decline"} />
+        </div>
+      </details>)}
+    </div> });
+  }
+
+  function showTrendData(item: Period, matchingRows: Section[], dimension: Dimension | "all") {
+    const previousRows = scopedRows({ ...scope, period: item.id - 1 }, course, section);
+    const score = averageSete(matchingRows, dimension);
+    const change = compare(score, averageSete(previousRows, dimension), 2);
+    const scopeMetrics = summarize(scopedRows({ ...scope, period: item.id }, course, section));
+    openDetail({ title: "Semester SETE records", description: item.label, content: <>
+      <p className="detail-summary">{formatScore(score)} / 5 · {integer(scopeMetrics.responses)} valid responses · {formatPercent(scopeMetrics.passing)} passing
+        {change !== null && ` · ${signed(change, 2)} pts vs previous period`}.</p>
+      <SectionPerformanceTable assessments={assessSections(matchingRows, previousRows)}
+        dimension={dimension === "all" ? undefined : dimension} />
+    </> });
+  }
+
+  const cards = [
+    { id: "sete", title: "Overall SETE rating", icon: Activity, number: formatScore(metrics.sete), unit: metrics.sete === null ? "" : "/ 5",
+      change: compare(comparableRating, priorComparableRating, 2), decimals: 2, deltaUnit: "pts", status: metrics.coverage ? "Student ratings" : "No responses",
+      tone: "info", onOpen: () => showRecords("Overall SETE rating", assessments.filter(({ rating }) => rating !== null),
+        `Weighted by ${integer(metrics.responses)} valid responses across ${metrics.coverage} sections. ${comparable.length
+          ? `Comparable sections: ${formatScore(comparableRating)} / 5 vs ${formatScore(priorComparableRating)} / 5 in the previous period.`
+          : "No sections meet the comparison criteria in both periods."}`) },
+    { id: "passing", title: "Student passing rate", icon: GraduationCap, number: metrics.passing === null ? "N/A" : metrics.passing.toFixed(1), unit: metrics.passing === null ? "" : "%",
+      change: compare(metrics.passing, prior.passing, 1), decimals: 1, deltaUnit: "pp",
+      status: metrics.passing === null ? "No grades" : metrics.passing < targets.passing ? "Below benchmark" : "Meets benchmark",
+      tone: metrics.passing === null ? "neutral" : metrics.passing < targets.passing ? "warning" : "positive",
+      onOpen: () => showRecords("Student passing rate", assessments.filter(({ row }) => row.graded > 0),
+        `${integer(metrics.passed)} of ${integer(metrics.graded)} finalized enrollments passed. Previous period: ${formatPercent(prior.passing)}. Demo benchmark: ${targets.passing}%.`) },
+    { id: "review", title: "Sections needing review", icon: ClipboardCheck, number: String(review.length), unit: `/ ${evaluated.length}`,
+      change: null, decimals: 0, deltaUnit: "", status: !evaluated.length ? "Insufficient data" : review.length ? "Needs review" : "No review flags",
+      tone: !evaluated.length ? "info" : review.length ? "critical" : "positive", onOpen: () => showRecords("Sections needing review", review,
+        `${review.length} of ${evaluated.length} sections evaluated. Evaluation requires enough evidence for at least one measure. Substantial or multiple concerns trigger review.`) },
+    { id: "participation", title: "SETE participation rate", icon: Vote, number: metrics.participation === null ? "N/A" : metrics.participation.toFixed(1), unit: metrics.participation === null ? "" : "%",
+      change: compare(metrics.participation, prior.participation, 1), decimals: 1, deltaUnit: "pp", status: metrics.participation === null ? "No invitations"
+        : metrics.participation < targets.participation ? "Low participation" : "Meets benchmark",
+      tone: metrics.participation === null ? "neutral" : metrics.participation < targets.participation ? "warning" : "positive",
+      onOpen: () => showRecords("SETE participation rate", assessments,
+        `${integer(metrics.responses)} of ${integer(metrics.invitations)} invitations returned valid responses. Previous period: ${formatPercent(prior.participation)}.`) },
+    { id: "improvement", title: "Teaching improvement rate", icon: TrendingUp, number: improvement === null ? "N/A" : improvement.toFixed(1), unit: improvement === null ? "" : "%",
+      change: null, decimals: 0, deltaUnit: "", status: improvement === null ? "No comparable data" : `${improved.length} improved`,
+      tone: improvement === null ? "info" : improved.length ? "positive" : "neutral", onOpen: () => showRecords("Teaching improvement rate", comparable,
+        `${improved.length} of ${comparable.length} comparable sections improved. Comparisons match subject, section and professor across ${previousPeriod?.label ?? "the previous period"}, with adequate participation in both periods.`, { comparison: true }) },
   ];
 
   return <div className="page-stack overview">
     <div className="page-heading">
-      <div><h1>Program Overview</h1><p className="no-print">{period.label}</p></div>
+      <div><h1>Program Overview</h1><p className="no-print">{period.label} <span className="context-separator">·</span> Illustrative data</p></div>
       <div className="heading-action no-print">
         <Button variant="outline" aria-label="Print overview" title="Print overview" onClick={() => window.print()}>
           <Printer data-icon="inline-start" /><span>Print overview</span>
@@ -194,79 +190,66 @@ export function Overview() {
       </div>
     </div>
     <OverviewFilters />
-    {activeAlerts && <NoticeBanner notice={activeAlerts} more={notices.length - 1}
-      onOpen={() => readNotice(activeAlerts)} onOpenAll={() => openAlerts(notices.slice(1))} />}
+    {priority && <PriorityAlert notice={priority} more={alerts.length - 1} onOpen={() => showFinding(priority)} onMore={showAlerts} />}
+
     <section className="kpi-grid" aria-label="Key performance indicators">
-      {kpis.map((kpi) => {
-        const score = kpi.key === "sete";
-        const decimals = score ? 2 : 1;
-        const change = compare(kpi.value, kpi.previous ?? null, decimals);
-        const format = score ? formatScore : formatPercent;
-        const changeTone: Tone = change === null || change === 0 || kpi.key === "capacity" ? "neutral" : change > 0 ? "positive" : "warning";
-        const delta = change === null ? "—" : `${signed(change, decimals)} ${score ? "pts" : "pp"}`;
-        const priorDescription = change === null ? "No previous-period comparison"
-          : `${delta} vs previous period (${format(kpi.previous ?? null)})`;
-        return <Button key={kpi.key} variant="ghost" className="kpi"
-          onClick={() => openRecords(kpi.name, kpi.rows, period,
-            `${period.label} · ${kpi.benchmark}`, `${format(kpi.value)}${score && kpi.value !== null ? " / 5" : ""} · ${kpi.detail}. ${kpi.key === "submission" ? `Reporting date: ${period.snapshot}. ` : ""}${previousPeriod ? `Previous semester: ${format(kpi.previous ?? null)}.` : ""}`, kpi.key)}>
-          <span className="kpi-title">{kpi.name}</span>
-          <span className="kpi-value">{kpi.value === null ? "N/A" : kpi.value.toFixed(decimals)}{kpi.value !== null && <small>{score ? "/ 5" : "%"}</small>}</span>
+      {cards.map(({ id, title, icon: Icon, number, unit, change, decimals, deltaUnit, status, tone, onOpen }) => {
+        const Trend = change === null || change === 0 ? Minus : change < 0 ? ArrowDownRight : ArrowUpRight;
+        const delta = change === null ? "" : `${signed(change, decimals)} ${deltaUnit}`;
+        const showTrend = id !== "review" && id !== "improvement";
+        const comparison = delta ? `${delta} vs previous period${id === "sete" ? " for comparable sections" : ""}` : "No prior comparison";
+        return <Button key={id} variant="ghost" className="kpi" onClick={onOpen}>
+          <span className="kpi-title"><Icon aria-hidden="true" />{title}</span>
+          <span className="kpi-value" key={number}>{number}{unit && <small>{unit}</small>}</span>
           <span className="kpi-meta">
-            <span className="kpi-change" data-tone={changeTone} title={priorDescription}>
-              {change !== null && (change > 0 ? <ArrowUpRight aria-hidden="true" /> : change < 0 ? <ArrowDownRight aria-hidden="true" /> : <Minus aria-hidden="true" />)}
-              <span aria-hidden="true">{delta}</span><span className="sr-only">{priorDescription}</span>
-            </span>
-            <Status tone={kpi.tone as Tone}>{kpi.status}</Status>
+            {showTrend && <span className="kpi-change" title={comparison}
+              data-tone={change === null || change === 0 ? "neutral" : change < 0 ? "warning" : "positive"}>
+              <Trend aria-hidden="true" /><span aria-hidden="true">{delta}</span><span className="sr-only">{comparison}</span>
+            </span>}
+            <Status tone={tone as Tone}>{status}</Status>
           </span>
         </Button>;
       })}
     </section>
 
     <section className="dashboard-section performance-section" aria-labelledby="performance-title">
-      <header className="section-heading"><h2 id="performance-title">Performance Analytics</h2></header>
+      <header className="section-heading"><h2 id="performance-title">SETE &amp; Academic Analytics</h2></header>
       <div className="dashboard-grid chart-grid">
-      <div className="span-seven"><SeteTrend scope={scope} period={period} course={course}
-        onOpen={(item, detailRows, dimension) => openRecords("Semester SETE records", detailRows, item, item.label,
-          undefined, dimension === "all" ? "sete" : dimension)} /></div>
-      <div className="span-five"><CoursePassingChart courses={courses} onOpen={(course) => openRecords(
-        `${course.name} · Passing rate`, course.rows.filter((row) => row.graded > 0), period, `${course.code} · ${period.label}`,
-        `${course.metrics.passed} of ${course.metrics.graded} graded enrollments passed · ${targets.passing}% demo target.`, "passing")} /></div>
-      <div className="span-full"><CapacityChart rows={rows} period={period}
-        onOpen={(name, detailRows) => openRecords(`${name} · Capacity`, detailRows, period, period.label, undefined, "capacity")} /></div>
-      </div>
-    </section>
-
-    <TeachingEffectiveness rows={rows} previous={previous} metrics={metrics} onOpenDimension={(dimension, name, summary) =>
-      openRecords(name, rows.filter((row) => row.scores && row.responses > 0), period, period.label, summary, dimension)} />
-
-    <section className="dashboard-section section-reveal no-print" aria-labelledby="planning-title">
-      <header className="section-heading"><h2 id="planning-title">Insights &amp; Predictive Planning</h2></header>
-      <div className="decision-grid">
-        <Insights findings={findings} onOpen={readInsight} />
-        <EnrollmentForecast period={period} enrolled={metrics.enrolled} capacity={metrics.seats} />
+        <div className="span-seven"><SeteTrend scope={scope} period={period} course={course} section={section} onOpen={showTrendData} /></div>
+        <div className="span-five"><SectionSeteChart assessments={assessments} selected={selected} onOpen={showSection} /></div>
+        <div className="span-full"><SetePassingScatter assessments={assessments} selected={selected} onOpen={showSection} /></div>
       </div>
     </section>
 
     <section className="dashboard-section section-reveal no-print" aria-labelledby="records-title">
-      <header className="section-heading"><h2 id="records-title">Course Records</h2></header>
-      <Card className="section-records">
-      <CardContent>
-        <RecordsTable key={filterVersion} label="Course sections" rows={records}
-          columns={sectionColumns(period).filter(({ id }) => id !== "faculty")} keyOf={(row) => row.id}
-          onOpen={openSection} pageSize={6}
-          exportName={`acadgine-sections-${period.year.replace("–", "-")}-s${period.semester}-${scope.program.toLowerCase()}${course === "all" ? "" : `-${course.replaceAll(" ", "-").toLowerCase()}`}`}
-          tools={<DashboardSelect label="Grade submission status" value={status} onChange={setStatus} active={status !== "all"}
+      <header className="section-heading"><h2 id="records-title">Section Performance</h2></header>
+      <Card className="section-records"><CardContent>
+        <SectionPerformanceTable key={filterVersion} assessments={records} onOpen={showSection}
+          exportName={`acadgine-sections-${period.year.replace("–", "-")}-s${period.semester}-${scope.program.toLowerCase()}`}
+          statusFilter={<DashboardSelect<ReviewStatus | "all"> label="Review status" value={status} onChange={setStatus} active={status !== "all"}
             options={[{ value: "all", label: "All statuses" },
-              ...["On time", "Late", "Overdue", "Upcoming"].map((item) => ({ value: item, label: item }))]} />} />
-      </CardContent>
-      </Card>
+              ...(Object.keys(reviewTones) as ReviewStatus[]).map((value) => ({ value, label: value }))]} />} />
+      </CardContent></Card>
+    </section>
+
+    <TeachingEffectiveness rows={rows} assessments={assessments} metrics={metrics} onOpenDimension={(dimension, name, summary) =>
+      showRecords(name, assessments.filter(({ row }) => row.scores && row.responses > 0), summary, { dimension })} />
+
+    <section className="dashboard-section section-reveal no-print" aria-labelledby="planning-title">
+      <header className="section-heading"><h2 id="planning-title">Insights &amp; Predictive Planning</h2></header>
+      <div className="decision-grid">
+        <Insights findings={insights} onOpen={showFinding} />
+        <EnrollmentForecast period={period} enrolled={metrics.enrolled} capacity={metrics.seats} />
+      </div>
     </section>
 
     <footer className="dashboard-method no-print">
       <details className="disclosure">
-        <summary><span><Info aria-hidden="true" /> Simulated data</span><ChevronRight aria-hidden="true" /></summary>
+        <summary><span><Info aria-hidden="true" /> Simulated data &amp; review rules</span><ChevronRight aria-hidden="true" /></summary>
         <div className="disclosure-body">
-          <p>Fictional records and illustrative benchmarks. Trends compare with the preceding period when data is available.</p>
+          <p>Fictional SETE responses and simulated Student and Faculty Portal records. Passing rates use finalized enrollments. SETE measures student evaluations and uses response-count weighting.</p>
+          <p>Demo review needs a substantial concern or multiple concerns. Academic evidence requires at least {targets.minGraded} finalized grades. SETE evidence requires {targets.minResponses} valid responses and {targets.minParticipation}% participation.</p>
+          <p>Sections with adequate evidence for at least one measure count as evaluated. SETE changes match subject, section and professor in both periods. Flags guide academic review and should be interpreted alongside teaching context.</p>
         </div>
       </details>
     </footer>
