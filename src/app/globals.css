@@ -404,7 +404,7 @@ button.point-row:hover { color: var(--accent); background: var(--hover); }
 
 .decision-grid, .teaching-grid {
   display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-  align-items: start; gap: var(--gap);
+  align-items: stretch; gap: var(--gap);
 }
 .context-disclosure { position: relative; flex: none; }
 .context-disclosure summary {
