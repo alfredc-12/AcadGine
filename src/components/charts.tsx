@@ -27,6 +27,7 @@ export function ChartPanel({ title, controls, children, className }: {
 }
 
 const ratingTicks = [1, 2, 3, 4, 5];
+const trendRatingTicks = Array.from({ length: 17 }, (_, index) => 1 + index / 4);
 const axis = { fill: "var(--muted)", fontSize: 11, fontFamily: "inherit" };
 
 function useChartMotion() {
@@ -85,10 +86,16 @@ export function SeteTrend({ scope, period, course, section, onOpen }: {
       <span className="trend-period">Selected · {period.short}</span>
     </div>
     {hasData ? <div className="trend-plot" aria-label="SETE ratings by semester on a 1–5 scale">
-      <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 550, height: 172 }}>
+      <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 550, height: 315 }}>
         <LineChart data={series} margin={{ top: 12, right: 15, left: 0, bottom: 5 }} accessibilityLayer>
-          <CartesianGrid vertical={false} stroke="var(--chart-grid)" />
-          <YAxis ticks={ratingTicks} domain={[1, 5]} tick={axis} tickLine={false} axisLine={false} width={27} allowDataOverflow />
+          <CartesianGrid vertical={false} horizontalValues={ratingTicks} stroke="var(--chart-grid)" />
+          <YAxis ticks={trendRatingTicks} domain={[1, 5]} interval={0} tickLine={false} axisLine={false}
+            width={39} allowDataOverflow tick={({ x, y, payload, textAnchor }) => (
+              <text x={x} y={y} dy="0.32em" textAnchor={textAnchor} {...axis}
+                className={Number.isInteger(payload.value) ? undefined : "trend-quarter-tick"}>
+                {Number(payload.value).toFixed(2)}
+              </text>
+            )} />
           <XAxis dataKey="label" tick={axis} tickLine={false} axisLine={false} minTickGap={12} tickMargin={8} />
           <ReferenceLine x={period.short} stroke="var(--chart-accent)" strokeOpacity={0.65} strokeDasharray="3 4" />
           <Tooltip cursor={{ stroke: "var(--chart-grid)" }} content={({ active, payload }) => {
