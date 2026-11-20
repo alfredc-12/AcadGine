@@ -19,7 +19,7 @@ const sectionColumns: Column<SectionAssessment>[] = [
   { id: "passing", title: "Passing (%)", value: (item) => item.passing, numeric: true, display: (item) => formatPercent(item.passing) },
   { id: "participation", title: "SETE response (%)", value: (item) => item.participation, numeric: true, display: (item) => formatPercent(item.participation) },
   { id: "status", title: "Status", value: (item) => item.status,
-    display: (item) => <Status tone={reviewTones[item.status]}>{item.status}</Status> },
+    display: (item) => <Status key={item.status} tone={reviewTones[item.status]} record>{item.status}</Status> },
 ];
 
 export function SectionPerformanceTable({ assessments, onOpen, exportName, statusFilter, comparison = false, dimension }: {

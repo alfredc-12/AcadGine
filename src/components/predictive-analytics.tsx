@@ -53,7 +53,7 @@ export function PredictiveAnalytics() {
     <header className="section-heading"><h2 id="predictive-title">Predictive Analytics</h2></header>
     <Card aria-labelledby="predictive-model-title">
       <CardHeader>
-        <CardTitle as="h3" id="predictive-model-title">Experimental Predictive Model — Synthetic Data</CardTitle>
+        <CardTitle as="h3" id="predictive-model-title">Academic Performance Prediction Model</CardTitle>
         <details className="context-disclosure">
           <summary aria-label="About these predictions"><Info aria-hidden="true" /></summary>
           <p>The Random Forest was trained on fictional academic records. Forecasts use observed enrollment, passing rates, and SETE indicators from the prior semester. Real university validation is unavailable. SETE ratings cannot establish causes. Use predictions as one input to academic review.</p>
@@ -66,14 +66,16 @@ export function PredictiveAnalytics() {
             {forecast && <p className="prediction-context">
               AY {forecast.targetYear}–{forecast.targetYear + 1} · Semester {forecast.targetSemester} · From {period.short}
             </p>}
-            <dl className="prediction-facts">
-              <div><dt>Predicted</dt><dd>{formatPercent(predicted)}</dd></div>
-              <div><dt>Current</dt><dd>{formatPercent(current)}</dd></div>
-              <div><dt>Predicted change</dt><dd>{changeLabel(predicted, current)}</dd></div>
+            <dl className="prediction-facts prediction-forecast-facts">
+              <div><dt>Predicted</dt><dd><span className="prediction-value" key={predicted ?? "unavailable"}>{formatPercent(predicted)}</span></dd></div>
+              <div><dt>Current</dt><dd><span className="prediction-value" key={current ?? "unavailable"}>{formatPercent(current)}</span></dd></div>
+              <div className="prediction-change"><dt>Predicted change</dt>
+                <dd><span className="prediction-value" key={changeLabel(predicted, current)}>{changeLabel(predicted, current)}</span></dd>
+              </div>
             </dl>
             {predictions.length ? <>
               <p className="prediction-context">{predictions.length} of {rows.length} sections · Weighted by current graded enrollments</p>
-              <div className="prediction-table">
+              <div className="prediction-table prediction-forecast-table">
                 <Table aria-label="Next-semester section predictions">
                   <thead><tr>
                     <th scope="col">Section</th><th scope="col" className="number">Current</th>
@@ -92,7 +94,7 @@ export function PredictiveAnalytics() {
 
           <div className="prediction-panel">
             <h4>Held-out evaluation</h4>
-            <dl className="prediction-facts">
+            <dl className="prediction-facts prediction-evaluation-facts">
               <div><dt>Random Forest MAE</dt><dd>{metrics.test_mae_percentage_points.toFixed(2)} <small>pp</small></dd></div>
               <div><dt>Random Forest RMSE</dt><dd>{metrics.test_rmse_percentage_points.toFixed(2)} <small>pp</small></dd></div>
               <div><dt>Baseline MAE</dt><dd>{metrics.baseline_mae_percentage_points.toFixed(2)} <small>pp</small></dd></div>

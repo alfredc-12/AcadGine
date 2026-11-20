@@ -1,12 +1,14 @@
 "use client";
 
-import { ArrowDown, ArrowRight, ArrowUp, ChevronLeft, ChevronRight, Download, Search } from "lucide-react";
-import { type ReactNode, useMemo, useState } from "react";
+import { ArrowRight, ArrowUp, ChevronLeft, ChevronRight, Download, Search } from "lucide-react";
+import { type CSSProperties, type ReactNode, useMemo, useState } from "react";
 import type { Tone } from "@/lib/analytics";
 import { Badge, Button, Empty, Input, Table } from "@/components/ui/primitives";
 
-export function Status({ children, tone = "neutral" }: { children: ReactNode; tone?: Tone }) {
-  return <Badge data-tone={tone}><span className="status-dot" aria-hidden="true" />{children}</Badge>;
+export function Status({ children, tone = "neutral", record = false }: { children: ReactNode; tone?: Tone; record?: boolean }) {
+  return <Badge className={record ? "record-status" : undefined} data-tone={tone}>
+    <span className="status-dot" aria-hidden="true" />{children}
+  </Badge>;
 }
 
 type Cell = string | number | null;
@@ -89,17 +91,20 @@ export function RecordsTable<Row>({ label, rows, columns, keyOf, onOpen, exportN
           onClick={() => download(exportName, columns, filtered)}><Download data-icon="inline-start" /> Export CSV</Button>}
       </div>
     </div>}
+    <div className="records-page-area" data-paginated={!simple && pageCount > 1}
+      style={{ "--record-page-rows": pageSize } as CSSProperties}>
     {visible.length ? <Table aria-label={label}>
       <thead><tr>{columns.map((column) => {
         const active = sort?.id === column.id;
-        const SortIcon = sort?.direction === "descending" ? ArrowDown : ArrowUp;
         return <th key={column.id} scope="col" className={column.numeric ? "number" : undefined} aria-sort={active ? sort?.direction : undefined}>
           {simple ? column.title : <button type="button" className="sort-button" onClick={() => sortBy(column.id)}>
-            {column.title}{active && <SortIcon aria-hidden="true" />}
+            {column.title}<ArrowUp className="sort-indicator" data-active={active}
+              data-direction={active ? sort?.direction : undefined} aria-hidden="true" />
           </button>}
         </th>;
       })}{onOpen && <th scope="col"><span className="sr-only">Details</span></th>}</tr></thead>
-      <tbody>{visible.map((row) => <tr key={keyOf(row)} data-interactive={onOpen ? "" : undefined}
+      <tbody className="records-page" key={`${activePage}:${sort?.id ?? ""}:${sort?.direction ?? ""}`}>
+        {visible.map((row) => <tr key={keyOf(row)} data-interactive={onOpen ? "" : undefined}
         onClick={onOpen ? (event) => {
           if (event.target instanceof Element && event.target.closest("button, a, input")) return;
           if (window.getSelection()?.toString()) return;
@@ -116,6 +121,7 @@ export function RecordsTable<Row>({ label, rows, columns, keyOf, onOpen, exportN
           aria-label={`View details for ${rowLabel?.(row) ?? columns[0].value(row)}`} onClick={() => onOpen(row)}><ArrowRight /></Button></td>}
       </tr>)}</tbody>
     </Table> : <Empty />}
+    </div>
     {!simple && <div className="pagination">
       <span aria-live="polite">{filtered.length ? `${offset + 1}–${offset + visible.length} of ${filtered.length}` : "0 records"}</span>
       <div>

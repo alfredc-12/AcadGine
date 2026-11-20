@@ -3,6 +3,7 @@
 import { ArrowUpRight } from "lucide-react";
 import { formatPercent, integer, percent, targets, type SectionAssessment } from "@/lib/analytics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/primitives";
+import { useViewportMotion } from "@/components/ui/use-viewport-motion";
 
 const ranges = [
   { label: "Below 3.0", below: 3, low: true },
@@ -16,6 +17,7 @@ export function SeteDistribution({ assessments, onOpen }: {
   assessments: SectionAssessment[];
   onOpen: (title: string, sections: SectionAssessment[], summary: string) => void;
 }) {
+  const distributionMotion = useViewportMotion<HTMLUListElement>();
   const groups = ranges.map((range) => ({ ...range, sections: [] as SectionAssessment[] }));
   const insufficient = assessments.filter(({ sufficientSete, rating }) => !sufficientSete || rating === null);
   const evaluated = assessments.length - insufficient.length;
@@ -32,7 +34,8 @@ export function SeteDistribution({ assessments, onOpen }: {
       <span className="chart-unit" title="Sections with sufficient SETE responses">{integer(evaluated)} evaluated</span>
     </CardHeader>
     <CardContent>
-      <ul className="distribution-list" aria-label="Section counts by SETE rating, out of 5">
+      <ul ref={distributionMotion.ref} className="distribution-list motion-bars" data-motion={distributionMotion.motion}
+        aria-label="Section counts by SETE rating, out of 5">
         {groups.map(({ label, low, sections }) => {
           const count = sections.length;
           const share = percent(count, evaluated);
@@ -42,7 +45,7 @@ export function SeteDistribution({ assessments, onOpen }: {
               aria-label={`${label} out of 5. ${summary}${count ? " View sections." : ""}`}
               onClick={() => onOpen(`SETE distribution · ${label}`, sections, summary)}>
               <span>{label}</span>
-              <span className="distribution-track" aria-hidden="true"><span style={{ width: `${share ?? 0}%` }} /></span>
+              <span className="distribution-track" aria-hidden="true"><span className="motion-bar" style={{ width: `${share ?? 0}%` }} /></span>
               <strong>{integer(count)}</strong>
               <span className="chart-tooltip bar-tooltip" aria-hidden="true">{summary}</span>
             </button>

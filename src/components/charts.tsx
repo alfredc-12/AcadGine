@@ -1,9 +1,9 @@
 "use client";
 
 import { ArrowUpRight, ChevronRight, Info, Minus, Plus } from "lucide-react";
-import { type ReactNode, useEffect, useId, useMemo, useRef, useState } from "react";
+import { type CSSProperties, type KeyboardEvent, type ReactNode, useEffect, useId, useMemo, useRef, useState } from "react";
 import {
-  CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Scatter, ScatterChart,
+  Area, CartesianGrid, ComposedChart, Line, ReferenceLine, ResponsiveContainer, Scatter, ScatterChart,
   Tooltip, XAxis, YAxis, type ScatterShapeProps,
 } from "recharts";
 import { useReportingFilter } from "@/components/app-shell";
@@ -12,6 +12,7 @@ import { averageSete, compare, formatPercent, formatScore, integer, previousRepo
   reviewTones, type Scope, type SectionAssessment } from "@/lib/analytics";
 import { Button, Card, CardContent, CardHeader, CardTitle, Empty } from "@/components/ui/primitives";
 import { DashboardSelect } from "@/components/ui/select";
+import { useViewportMotion } from "@/components/ui/use-viewport-motion";
 
 export function ChartPanel({ title, controls, children, className }: {
   title: string; controls?: ReactNode; children: ReactNode; className?: string;
@@ -48,16 +49,10 @@ function trendScales(ratings: number[]) {
   return scales;
 }
 
-function useChartMotion() {
-  const [animate, setAnimate] = useState(false);
-  useEffect(() => {
-    const query = matchMedia("(prefers-reduced-motion: reduce)");
-    const sync = () => setAnimate(!query.matches);
-    sync();
-    query.addEventListener("change", sync);
-    return () => query.removeEventListener("change", sync);
-  }, []);
-  return animate;
+function activateChartPoint(event: KeyboardEvent<SVGElement>, open: () => void) {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  event.preventDefault();
+  open();
 }
 
 function ChartReadout({ children, controls }: { children: ReactNode; controls?: ReactNode }) {
@@ -81,8 +76,9 @@ export function SeteTrend({ scope, period, course, section, onOpen }: {
 }) {
   const [dimension, setDimension] = useReportingFilter<Dimension | "all">("all");
   const [zoom, setZoom] = useReportingFilter(0);
-  const animate = useChartMotion();
-  const plot = useRef<HTMLDivElement>(null);
+  const { element: plot, ref: plotRef, motion } = useViewportMotion<HTMLDivElement>();
+  const animate = motion === "visible";
+  const gradient = useId();
   const lastWheel = useRef(-Infinity);
   const series: TrendPoint[] = useMemo(() => {
     const observations = periods.map((item) => {
@@ -106,7 +102,7 @@ export function SeteTrend({ scope, period, course, section, onOpen }: {
   const upper = ticks[ticks.length - 1];
 
   useEffect(() => {
-    const element = plot.current;
+    const element = plot;
     if (!element) return;
 
     function wheel(event: WheelEvent) {
@@ -122,7 +118,7 @@ export function SeteTrend({ scope, period, course, section, onOpen }: {
 
     element.addEventListener("wheel", wheel, { passive: false });
     return () => element.removeEventListener("wheel", wheel);
-  }, [hasData, level, maxZoom, setZoom]);
+  }, [plot, level, maxZoom, setZoom]);
 
   function openPoint(index: number) {
     const entry = series[index];
@@ -137,9 +133,17 @@ export function SeteTrend({ scope, period, course, section, onOpen }: {
       <span className="chart-unit">Rating / 5</span>
       <span className="trend-period">Selected · {period.short}</span>
     </div>
-    {hasData ? <div ref={plot} className="trend-plot" aria-label="SETE ratings by semester. Scroll over the plot to zoom vertically.">
+    {hasData ? <div ref={plotRef} className="trend-plot" data-motion={motion}
+      aria-label="SETE ratings by semester. Scroll over the plot to zoom vertically.">
       <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 550, height: 172 }}>
-        <LineChart data={series} margin={{ top: 12, right: 15, left: 0, bottom: 5 }} accessibilityLayer>
+        <ComposedChart data={series} margin={{ top: 12, right: 15, left: 0, bottom: 5 }} accessibilityLayer>
+          <defs>
+            <linearGradient id={gradient} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--chart-accent)" stopOpacity={0.2} />
+              <stop offset="46%" stopColor="var(--chart-accent)" stopOpacity={0.08} />
+              <stop offset="100%" stopColor="var(--chart-accent)" stopOpacity={0} />
+            </linearGradient>
+          </defs>
           <CartesianGrid vertical={false} stroke="var(--chart-grid)" />
           <YAxis ticks={ticks} domain={[lower, upper]} tick={axis} tickFormatter={(value: number) => value.toFixed(decimals)}
             tickLine={false} axisLine={false} width={36} allowDataOverflow />
@@ -156,22 +160,30 @@ export function SeteTrend({ scope, period, course, section, onOpen }: {
               <small>{point.change === null ? "Previous-period change N/A" : `${signed(point.change, 2)} pts vs previous period`}</small>
             </div>;
           }} />
+          <Area className="trend-area" dataKey="value" type="linear" baseValue={lower}
+            fill={`url(#${gradient})`} stroke="none" dot={false} activeDot={false} tooltipType="none"
+            connectNulls={false} isAnimationActive={animate} animationDuration={590} animationEasing="ease-out" />
           <Line dataKey="value" type="linear" stroke="var(--chart-accent)" strokeWidth={2.4}
             dot={({ cx, cy, index }) => {
               if (cx == null || cy == null) return null;
-              const selected = series[index]?.period.id === period.id;
-              return <g key={index}>
-                <circle cx={cx} cy={cy} r={12} fill="transparent" className="trend-dot-hit" onClick={() => openPoint(index)} />
-                <circle cx={cx} cy={cy} r={selected ? 5 : 3.5} fill={selected ? "var(--chart-accent)" : "var(--surface)"}
-                  stroke="var(--chart-accent)" strokeWidth={1.6} pointerEvents="none" />
+              const point = series[index];
+              if (!point || point.value === null) return null;
+              const selected = point.period.id === period.id;
+              return <g key={index} className="trend-dot" data-selected={selected}>
+                <circle cx={cx} cy={cy} r={12} fill="transparent" className="trend-dot-hit" role="button" tabIndex={0}
+                  aria-label={`${point.period.label}, SETE ${formatScore(point.value)} out of 5. View details`}
+                  onClick={() => openPoint(index)} onKeyDown={(event) => activateChartPoint(event, () => openPoint(index))} />
+                <circle className="trend-dot-halo" cx={cx} cy={cy} r={8} pointerEvents="none" />
+                <circle className="trend-dot-mark" cx={cx} cy={cy} r={selected ? 5 : 3.5} pointerEvents="none" />
               </g>;
             }}
-            activeDot={({ cx, cy, index }) => <g>
+            activeDot={({ cx, cy, index }) => <g className="trend-dot" data-hovered="true" aria-hidden="true">
               <circle cx={cx} cy={cy} r={12} fill="transparent" className="trend-dot-hit" onClick={() => openPoint(index)} />
-              <circle cx={cx} cy={cy} r={5} fill="var(--chart-accent)" stroke="var(--surface)" strokeWidth={2} pointerEvents="none" />
+              <circle className="trend-dot-halo" cx={cx} cy={cy} r={9} pointerEvents="none" />
+              <circle className="trend-dot-mark" cx={cx} cy={cy} r={5} pointerEvents="none" />
             </g>}
-            connectNulls={false} isAnimationActive={animate} animationDuration={430} />
-        </LineChart>
+            connectNulls={false} isAnimationActive={animate} animationDuration={560} animationEasing="ease-out" />
+        </ComposedChart>
       </ResponsiveContainer>
     </div> : <Empty>No SETE observations for this selection.</Empty>}
     {hasData && <ChartReadout controls={
@@ -195,6 +207,7 @@ export function SeteTrend({ scope, period, course, section, onOpen }: {
 export function SectionSeteChart({ assessments, selected, onOpen }: {
   assessments: SectionAssessment[]; selected: string; onOpen: (assessment: SectionAssessment) => void;
 }) {
+  const { ref, motion } = useViewportMotion<HTMLDivElement>();
   const [sort, setSort] = useReportingFilter<string>("low");
   const [page, setPage] = useReportingFilter(0);
   const ordered = assessments.filter(({ rating }) => rating !== null)
@@ -210,7 +223,7 @@ export function SectionSeteChart({ assessments, selected, onOpen }: {
       onChange={(value) => { setSort(value); setPage(0); }}
       options={[{ value: "low", label: "Lowest first" }, { value: "high", label: "Highest first" }]} />
   }>
-    {visible.length ? <div className="section-bars">
+    {visible.length ? <div ref={ref} className="section-bars motion-bars" data-motion={motion}>
       {visible.map((item) => {
         const { row, rating, status, participation, sufficientSete } = item;
         const title = sectionTitle(row);
@@ -220,7 +233,7 @@ export function SectionSeteChart({ assessments, selected, onOpen }: {
           data-tone={tone} onClick={() => onOpen(item)}
           aria-label={`${title}, ${formatScore(rating)} out of 5, ${row.responses} responses, ${formatPercent(participation)} participation. ${note}. View details`}>
           <span className="section-bar-label">{courseByCode.get(row.course)?.name ?? row.course}<small>Section {row.section}</small></span>
-          <span className="section-bar-track" aria-hidden="true"><span className="section-bar-fill" style={{ width: `${(rating ?? 0) / 5 * 100}%` }} /></span>
+          <span className="section-bar-track" aria-hidden="true"><span className="section-bar-fill motion-bar" style={{ width: `${(rating ?? 0) / 5 * 100}%` }} /></span>
           <span className="section-bar-rating"><strong>{formatScore(rating)}</strong>
             {(tone === "critical" || tone === "warning" || tone === "info") && <i aria-hidden="true" title={note} />}
           </span>
@@ -245,19 +258,24 @@ export function SetePassingScatter({ assessments, selected, onOpen }: {
   selected: string;
   onOpen: (assessment: SectionAssessment) => void;
 }) {
-  const animate = useChartMotion();
+  const { ref, motion } = useViewportMotion<HTMLDivElement>();
   const points: ScatterDatum[] = assessments.flatMap((assessment) => assessment.rating === null || assessment.passing === null
     ? [] : [{ x: assessment.rating, y: assessment.passing, assessment }]);
 
-  function renderPoint({ cx, cy, payload, isActive }: ScatterShapeProps) {
+  function renderPoint({ cx, cy, payload, isActive, index }: ScatterShapeProps) {
     const datum = payload as ScatterDatum | undefined;
     if (cx == null || cy == null || !datum) return null;
     const item = datum.assessment;
-    const highlighted = isActive || selected === item.row.id;
-    return <g className="scatter-point" data-selected={highlighted} data-limited={!item.sufficientSete}
-      data-tone={reviewTones[item.status]} onClick={() => onOpen(item)}>
+    return <g className="scatter-point" data-selected={selected === item.row.id} data-hovered={isActive} data-limited={!item.sufficientSete}
+      data-tone={reviewTones[item.status]} role="button" tabIndex={0}
+      aria-label={`${sectionTitle(item.row)}, ${formatScore(item.rating)} SETE, ${formatPercent(item.passing)} passing. View details`}
+      style={{ "--point-delay": `${Math.min(index, 16) * 17}ms` } as CSSProperties}
+      onClick={() => onOpen(item)} onKeyDown={(event) => activateChartPoint(event, () => onOpen(item))}>
       <circle cx={cx} cy={cy} r={12} fill="transparent" />
-      <circle className="scatter-mark" cx={cx} cy={cy} r={highlighted ? 6.5 : 4.6} pointerEvents="none" />
+      <g className="scatter-painted" pointerEvents="none">
+        <circle className="scatter-halo" cx={cx} cy={cy} r={9} />
+        <circle className="scatter-mark" cx={cx} cy={cy} r={4.6} />
+      </g>
     </g>;
   }
 
@@ -267,7 +285,7 @@ export function SetePassingScatter({ assessments, selected, onOpen }: {
   </details>}>
     {points.length ? <>
       <span className="chart-unit">Passing rate (%)</span>
-      <div className="scatter-plot" aria-label="Section scatter plot, SETE rating from 1 to 5 and passing rate from 0 to 100 percent">
+      <div ref={ref} className="scatter-plot" data-motion={motion} aria-label="Section scatter plot, SETE rating from 1 to 5 and passing rate from 0 to 100 percent">
         <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 780, height: 210 }}>
           <ScatterChart margin={{ top: 9, right: 16, bottom: 4, left: 0 }} accessibilityLayer>
             <CartesianGrid stroke="var(--chart-grid)" />
@@ -288,7 +306,7 @@ export function SetePassingScatter({ assessments, selected, onOpen }: {
                 {!sufficientSete && <small>Limited SETE evidence</small>}
               </div>;
             }} />
-            <Scatter data={points} shape={renderPoint} activeShape={renderPoint} isAnimationActive={animate} animationDuration={390} />
+            <Scatter data={points} shape={renderPoint} activeShape={renderPoint} isAnimationActive={false} />
           </ScatterChart>
         </ResponsiveContainer>
       </div>

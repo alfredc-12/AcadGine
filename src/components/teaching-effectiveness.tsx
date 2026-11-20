@@ -1,10 +1,58 @@
 "use client";
 
 import { ArrowDownRight, ArrowUpRight, Info, Minus } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { Status } from "@/components/records";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/primitives";
+import { useViewportMotion } from "@/components/ui/use-viewport-motion";
 import { dimensions, type Dimension, type Section } from "@/data/academic";
 import { averageSete, compare, formatPercent, formatScore, integer, signed, targets, type SectionAssessment, type summarize } from "@/lib/analytics";
+
+function ParticipationDonut({ value, responses, invitations, tone }: {
+  value: number | null; responses: number; invitations: number; tone: "neutral" | "warning" | "positive";
+}) {
+  const { ref, motion } = useViewportMotion<HTMLDivElement>();
+  const [progress, setProgress] = useState(value ?? 0);
+  const current = useRef(value ?? 0);
+  const drawn = useRef(false);
+
+  useEffect(() => {
+    const destination = value ?? 0;
+    function draw(next: number) {
+      current.current = next;
+      setProgress(next);
+    }
+    if (value === null || motion !== "visible") {
+      draw(destination);
+      return;
+    }
+
+    const start = drawn.current ? current.current : 0;
+    drawn.current = true;
+    if (start === destination) return;
+    draw(start);
+    let frame = 0;
+    const startedAt = performance.now();
+    function advance(now: number) {
+      const elapsed = Math.min(1, (now - startedAt) / 760);
+      const eased = 1 - (1 - elapsed) ** 3;
+      draw(start + (destination - start) * eased);
+      if (elapsed < 1) frame = requestAnimationFrame(advance);
+    }
+    frame = requestAnimationFrame(advance);
+    return () => cancelAnimationFrame(frame);
+  }, [motion, value]);
+
+  return <div ref={ref} className="participation-donut" data-motion={motion} data-tone={tone}
+    role="img" aria-label={value === null ? "Participation unavailable" : `${formatPercent(value)} participation, ${responses} of ${invitations} invitations answered`}>
+    <svg viewBox="0 0 100 100" aria-hidden="true">
+      <circle className="donut-track" cx="50" cy="50" r="41" />
+      {value !== null && progress > 0 && <circle className="donut-fill" cx="50" cy="50" r="41" pathLength="100"
+        strokeDasharray={`${progress} 100`} transform="rotate(-90 50 50)" />}
+    </svg>
+    <strong aria-hidden="true">{formatPercent(value === null ? null : progress)}</strong>
+  </div>;
+}
 
 export function TeachingEffectiveness({ rows, assessments, metrics, onOpenDimension }: {
   rows: Section[];
@@ -12,6 +60,7 @@ export function TeachingEffectiveness({ rows, assessments, metrics, onOpenDimens
   metrics: ReturnType<typeof summarize>;
   onOpenDimension: (dimension: Dimension, name: string, summary: string) => void;
 }) {
+  const dimensionMotion = useViewportMotion<HTMLDivElement>();
   const pairs = assessments.flatMap(({ row, previous, change }) => previous && change !== null ? [{ row, previous }] : []);
   const currentComparable = pairs.map(({ row }) => row);
   const previousComparable = pairs.map(({ previous }) => previous);
@@ -48,7 +97,7 @@ export function TeachingEffectiveness({ rows, assessments, metrics, onOpenDimens
           <span className="chart-unit">Out of 5</span>
         </CardHeader>
         <CardContent>
-          <div className="dimension-list">
+          <div ref={dimensionMotion.ref} className="dimension-list motion-bars" data-motion={dimensionMotion.motion}>
             {ratings.map((rating) => {
               const { id, name, value, change } = rating;
               const needsReview = change !== null && change <= -targets.dimensionDrop;
@@ -58,7 +107,7 @@ export function TeachingEffectiveness({ rows, assessments, metrics, onOpenDimens
                 aria-label={`${name}, ${value === null ? "no ratings" : `${formatScore(value)} out of 5`}. ${trend}.${needsReview ? " Meets demo review threshold." : ""} View details`}>
                 <span className="dimension-name">{name}</span>
                 <span className="dimension-track" aria-hidden="true">
-                  <span style={{ width: `${(value ?? 0) / 5 * 100}%` }} />
+                  <span className="motion-bar" style={{ width: `${(value ?? 0) / 5 * 100}%` }} />
                 </span>
                 <strong>{formatScore(value)}</strong>
                 <span className="dimension-trend" aria-hidden="true" title={trend}
@@ -75,15 +124,18 @@ export function TeachingEffectiveness({ rows, assessments, metrics, onOpenDimens
         </CardHeader>
         <CardContent>
           <div className="participation-summary">
-            <strong>{formatPercent(participation)}</strong>
-            <p title={`${metrics.coverage} of ${rows.length} sections evaluated`}>{integer(metrics.responses)} / {integer(metrics.invitations)} responses
-              <small className="sr-only">{metrics.coverage} of {rows.length} sections evaluated.</small></p>
+            <ParticipationDonut value={participation} responses={metrics.responses} invitations={metrics.invitations} tone={participationTone} />
+            <div className="participation-copy">
+              <p title={`${metrics.coverage} of ${rows.length} sections evaluated`}>
+                <strong>{integer(metrics.responses)} / {integer(metrics.invitations)}</strong> responses
+                <small className="sr-only">{metrics.coverage} of {rows.length} sections evaluated.</small>
+              </p>
+              <dl className="participation-legend" data-tone={participationTone}>
+                <div><dt>Participated</dt><dd>{formatPercent(participation)}</dd></div>
+                <div><dt>Did not participate</dt><dd>{formatPercent(participation === null ? null : 100 - participation)}</dd></div>
+              </dl>
+            </div>
           </div>
-          {participation !== null && <div className="participation-meter" data-tone={participationTone}
-            role="meter" aria-label="SETE participation" aria-valuenow={Number(participation.toFixed(1))}
-            aria-valuemin={0} aria-valuemax={100} aria-valuetext={formatPercent(participation)}>
-            <span aria-hidden="true" style={{ width: `${participation}%` }} />
-          </div>}
           {focus.length > 0 && <div className="teaching-focus">
             <h4>Review focus</h4>
             <div>{focus.map((rating) => (

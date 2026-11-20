@@ -25,7 +25,7 @@ export function Sheet({ title, description, children, open, onOpenChange, onRest
               <Dialog.Title>{title}</Dialog.Title>
               <Dialog.Description className={description ? undefined : "sr-only"}>{description ?? title}</Dialog.Description>
             </div>
-            <Dialog.Close asChild><Button variant="ghost" size="icon" aria-label="Close panel"><X /></Button></Dialog.Close>
+            <Dialog.Close asChild><Button variant="ghost" size="icon" className="sheet-close" aria-label="Close panel"><X /></Button></Dialog.Close>
           </div>
           <div className="sheet-body">{children}</div>
         </Dialog.Content>

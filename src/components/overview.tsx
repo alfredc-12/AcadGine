@@ -60,6 +60,14 @@ function Insights({ findings, onOpen }: { findings: SectionFinding[]; onOpen: (f
   </Card>;
 }
 
+type DetailMetric = { label: string; value: string | number };
+
+function DetailHighlights({ metrics }: { metrics: DetailMetric[] }) {
+  return <dl className="detail-facts detail-highlights">
+    {metrics.map(({ label, value }) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
+  </dl>;
+}
+
 export function Overview() {
   const { scope, course, section, rows, previous, period, previousPeriod, filterVersion, openDetail } = useDashboard();
   const [status, setStatus] = useReportingFilter<ReviewStatus | "all">("all");
@@ -81,10 +89,12 @@ export function Overview() {
   const insights = findings.filter((finding) => finding.id !== priority?.id).slice(0, 3);
   const selected = section !== "all" ? rows[0]?.id ?? "" : openedSection;
 
-  function showRecords(title: string, records: SectionAssessment[], summary: string, options?: { comparison?: boolean; dimension?: Dimension }) {
+  function showRecords(title: string, records: SectionAssessment[], summary: string,
+    options?: { comparison?: boolean; dimension?: Dimension; highlights?: DetailMetric[] }) {
     openDetail({ title, description: period.label, content: <>
+      {options?.highlights && <DetailHighlights metrics={options.highlights} />}
       <p className="detail-summary">{summary}</p>
-      <SectionPerformanceTable assessments={records} {...options} />
+      <SectionPerformanceTable assessments={records} comparison={options?.comparison} dimension={options?.dimension} />
     </> });
   }
 
@@ -96,7 +106,8 @@ export function Overview() {
 
   function showFinding(finding: SectionFinding) {
     showRecords(finding.title, finding.sections, `${finding.summary}. ${finding.action}.`,
-      { comparison: finding.id === "decline" || finding.id === "improved" });
+      { comparison: finding.id === "decline" || finding.id === "improved",
+        highlights: [{ label: "Sections in this finding", value: finding.sections.length }] });
   }
 
   function showAlerts() {
@@ -117,8 +128,12 @@ export function Overview() {
     const change = compare(score, averageSete(previousRows, dimension), 2);
     const scopeMetrics = summarize(scopedRows({ ...scope, period: item.id }, course, section));
     openDetail({ title: "Semester SETE records", description: item.label, content: <>
-      <p className="detail-summary">{formatScore(score)} / 5 · {integer(scopeMetrics.responses)} valid responses · {formatPercent(scopeMetrics.passing)} passing
-        {change === null ? " · Previous-period change N/A" : ` · ${signed(change, 2)} pts vs previous period`}.</p>
+      <DetailHighlights metrics={[
+        { label: "SETE rating", value: score === null ? "N/A" : `${formatScore(score)} / 5` },
+        { label: "Valid responses", value: integer(scopeMetrics.responses) },
+        { label: "Passing rate", value: formatPercent(scopeMetrics.passing) },
+      ]} />
+      <p className="detail-summary">{change === null ? "Previous-period change N/A" : `${signed(change, 2)} pts vs previous period`}.</p>
       <SectionPerformanceTable assessments={assessSections(matchingRows, previousRows)}
         dimension={dimension === "all" ? undefined : dimension} />
     </> });
@@ -128,31 +143,55 @@ export function Overview() {
     { id: "sete", title: "Overall SETE rating", icon: Activity, number: formatScore(metrics.sete), unit: metrics.sete === null ? "" : "/ 5",
       change: compare(comparableRating, priorComparableRating, 2), decimals: 2, deltaUnit: "pts", status: metrics.coverage ? "Student ratings" : "No responses",
       tone: "info", onOpen: () => showRecords("Overall SETE rating", assessments.filter(({ rating }) => rating !== null),
-        `Weighted by ${integer(metrics.responses)} valid responses across ${metrics.coverage} sections. ${comparable.length
+        `SETE ratings are weighted by valid responses. ${comparable.length
           ? `Comparable sections: ${formatScore(comparableRating)} / 5 vs ${formatScore(priorComparableRating)} / 5 in the previous period.`
-          : "No sections meet the comparison criteria in both periods."}`) },
+          : "No sections meet the comparison criteria in both periods."}`,
+        { highlights: [
+          { label: "SETE rating", value: metrics.sete === null ? "N/A" : `${formatScore(metrics.sete)} / 5` },
+          { label: "Valid responses", value: integer(metrics.responses) },
+          { label: "Sections evaluated", value: metrics.coverage },
+        ] }) },
     { id: "passing", title: "Student passing rate", icon: GraduationCap, number: metrics.passing === null ? "N/A" : metrics.passing.toFixed(1), unit: metrics.passing === null ? "" : "%",
       change: compare(metrics.passing, prior.passing, 1), decimals: 1, deltaUnit: "pp",
       status: metrics.passing === null ? "No grades" : metrics.passing < targets.passing ? "Below benchmark" : "Meets benchmark",
       tone: metrics.passing === null ? "neutral" : metrics.passing < targets.passing ? "warning" : "positive",
       onOpen: () => showRecords("Student passing rate", assessments.filter(({ row }) => row.graded > 0),
-        `${integer(metrics.passed)} of ${integer(metrics.graded)} finalized enrollments passed. Previous period: ${formatPercent(prior.passing)}. Demo benchmark: ${targets.passing}%.`) },
+        `Previous period: ${formatPercent(prior.passing)}. Demo benchmark: ${targets.passing}%.`,
+        { highlights: [
+          { label: "Passing rate", value: formatPercent(metrics.passing) },
+          { label: "Enrollments passed", value: integer(metrics.passed) },
+          { label: "Finalized enrollments", value: integer(metrics.graded) },
+        ] }) },
     { id: "review", title: "Sections needing review", icon: ClipboardCheck, number: String(review.length), unit: `/ ${evaluated.length}`,
       change: null, decimals: 0, deltaUnit: "", status: !evaluated.length ? "Insufficient data" : review.length ? "Needs review" : "No review flags",
       tone: !evaluated.length ? "info" : review.length ? "critical" : "positive", onOpen: () => showRecords("Sections needing review", review,
-        `${review.length} of ${evaluated.length} sections evaluated. Evaluation requires enough evidence for at least one measure. Substantial or multiple concerns trigger review.`) },
+        "Evaluation requires enough evidence for at least one measure. Substantial or multiple concerns trigger review.",
+        { highlights: [
+          { label: "Sections under review", value: review.length },
+          { label: "Sections evaluated", value: evaluated.length },
+        ] }) },
     { id: "participation", title: "SETE participation rate", icon: Vote, number: metrics.participation === null ? "N/A" : metrics.participation.toFixed(1), unit: metrics.participation === null ? "" : "%",
       change: compare(metrics.participation, prior.participation, 1), decimals: 1, deltaUnit: "pp", status: metrics.participation === null ? "No invitations"
         : metrics.participation < targets.participation ? "Low participation" : "Meets benchmark",
       tone: metrics.participation === null ? "neutral" : metrics.participation < targets.participation ? "warning" : "positive",
       onOpen: () => showRecords("SETE participation rate", assessments,
-        `${integer(metrics.responses)} of ${integer(metrics.invitations)} invitations returned valid responses. Previous period: ${formatPercent(prior.participation)}.`) },
+        `Previous period: ${formatPercent(prior.participation)}.`,
+        { highlights: [
+          { label: "Participation", value: formatPercent(metrics.participation) },
+          { label: "Valid responses", value: integer(metrics.responses) },
+          { label: "Eligible invitations", value: integer(metrics.invitations) },
+        ] }) },
     { id: "improvement", title: "Teaching improvement rate", icon: TrendingUp, number: improvement === null ? "N/A" : improvement.toFixed(1), unit: improvement === null ? "" : "%",
       change: null, decimals: 0, deltaUnit: "", status: improvement === null ? "No comparable data" : `${improved.length} improved`,
       tone: improvement === null ? "info" : improved.length ? "positive" : "neutral", onOpen: () => showRecords("Teaching improvement rate", comparable,
         previousPeriod
-          ? `${improved.length} of ${comparable.length} comparable sections improved. Comparisons match subject, section and professor with ${previousPeriod.label} and require adequate participation in both periods.`
-          : "Teaching improvement is N/A because there is no previous reporting period.", { comparison: true }) },
+          ? `Comparisons match subject, section and professor with ${previousPeriod.label} and require adequate participation in both periods.`
+          : "Teaching improvement is N/A because there is no previous reporting period.",
+        { comparison: true, highlights: [
+          { label: "Improvement rate", value: formatPercent(improvement) },
+          { label: "Sections improved", value: improved.length },
+          { label: "Comparable sections", value: comparable.length },
+        ] }) },
   ];
 
   return <div className="page-stack overview">
